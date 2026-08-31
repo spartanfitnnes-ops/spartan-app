@@ -6,6 +6,12 @@
     <title>Spartan Fitness - Gestor de Operaciones</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Flatpickr (Calendario de GitHub) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
     <style>
         :root {
             --bg-color: #111111;
@@ -114,6 +120,49 @@
             padding-bottom: 8px;
         }
 
+        /* Filter Toolbar */
+        .filter-card {
+            background-color: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .filter-btn.active {
+            background-color: var(--gold);
+            color: #111;
+            border-color: var(--gold);
+        }
+
+        .calendar-input {
+            flex-grow: 1;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
         .card-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -166,6 +215,7 @@
 
         input[type="text"],
         input[type="number"],
+        input[type="date"],
         select {
             width: 100%;
             padding: 12px;
@@ -174,11 +224,6 @@
             border-radius: 6px;
             color: var(--text-color);
             font-size: 15px;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--gold);
         }
 
         .btn {
@@ -287,23 +332,38 @@
         
         <!-- DASHBOARD -->
         <section id="dashboard" class="section active">
-            <h2>Estado Financiero General</h2>
+            <h2>Dashboard Interactivo</h2>
             
+            <!-- Calendario & Filtros de Fecha -->
+            <div class="filter-card">
+                <label>Filtrar por Fecha / Período:</label>
+                <div class="filter-controls" style="margin-top: 8px;">
+                    <button class="filter-btn active" onclick="setFiltro('todos', this)">Todo</button>
+                    <button class="filter-btn" onclick="setFiltro('hoy', this)">Hoy</button>
+                    <button class="filter-btn" onclick="setFiltro('mes', this)">Este Mes</button>
+                    <input type="text" id="calendarPicker" class="calendar-input" placeholder="📅 Seleccionar día...">
+                </div>
+            </div>
+
             <div class="card-grid">
                 <div class="card">
-                    <h3>Recaudo Ventas</h3>
+                    <h3 id="labelVentas">Total Recaudo</h3>
                     <div class="value" id="dashVentas">$48,126,400</div>
                 </div>
                 <div class="card">
-                    <h3>Gastos Totales</h3>
+                    <h3 id="labelGanancia">Ganancia Neta</h3>
+                    <div class="value positive" id="dashGanancia">$0</div>
+                </div>
+                <div class="card">
+                    <h3 id="labelGastos">Gastos Totales</h3>
                     <div class="value negative" id="dashGastos">$0</div>
                 </div>
                 <div class="card">
                     <h3>Flujo de Caja Real</h3>
                     <div class="value positive" id="dashFlujo">$5,013,000</div>
                 </div>
-                <div class="card">
-                    <h3>Punto de Equilibrio</h3>
+                <div class="card" style="grid-column: span 2;">
+                    <h3>Faltante Punto de Equilibrio</h3>
                     <div class="value negative" id="dashEquilibrio">-$4,717,927</div>
                 </div>
             </div>
@@ -317,6 +377,10 @@
         <section id="ventas" class="section">
             <h2>Registrar Nueva Venta</h2>
             <form id="saleForm">
+                <div class="form-group">
+                    <label>Fecha de Venta</label>
+                    <input type="date" id="fechaVentaManual" required>
+                </div>
                 <div class="form-group">
                     <label>Producto / Referencia</label>
                     <input type="text" id="producto" placeholder="Ej: Camiseta Oversize Talla M" required>
@@ -345,9 +409,9 @@
             </form>
 
             <div class="recent-list">
-                <h2>Últimas Ventas</h2>
+                <h2>Ventas Registradas</h2>
                 <div id="listaVentas">
-                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Sin registros en esta sesión.</p>
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Cargando datos...</p>
                 </div>
             </div>
         </section>
@@ -356,6 +420,10 @@
         <section id="gastos" class="section">
             <h2>Registrar Gasto / Recompra</h2>
             <form id="gastoForm">
+                <div class="form-group">
+                    <label>Fecha del Gasto</label>
+                    <input type="date" id="fechaGastoManual" required>
+                </div>
                 <div class="form-group">
                     <label>Categoría del Gasto</label>
                     <select id="categoriaGasto">
@@ -379,9 +447,9 @@
             </form>
 
             <div class="recent-list">
-                <h2>Últimos Gastos</h2>
+                <h2>Gastos Registrados</h2>
                 <div id="listaGastos">
-                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Sin gastos registrados hoy.</p>
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Cargando gastos...</p>
                 </div>
             </div>
         </section>
@@ -421,15 +489,39 @@
     <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbx4Opo5e5Q7wOpXvso_llhfyPV_jrv4XSrOnN2lgfqHp1z2D1VTpzmVWcWccy-f1jDv/exec';
 
-        // Lógica Modo Día / Noche
+        // BASE DE DATOS INICIAL DEL EXCEL
+        const BASE_RECAUDO = 48126400;
+        const BASE_FLUJO = 5013000;
+        const BASE_EQUILIBRIO = -4717927.91;
+
+        let dbVentas = [];
+        let dbGastos = [];
+        let chartInstance = null;
+        let filtroActual = 'todos';
+        let fechaSeleccionada = null;
+
+        // Establecer fechas de hoy por defecto en inputs
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('fechaVentaManual').value = todayStr;
+        document.getElementById('fechaGastoManual').value = todayStr;
+
+        // Inicializar Calendario Flatpickr
+        flatpickr("#calendarPicker", {
+            locale: "es",
+            dateFormat: "Y-m-d",
+            onChange: function(selectedDates, dateStr) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                filtroActual = 'fecha';
+                fechaSeleccionada = dateStr;
+                actualizarDashboard();
+            }
+        });
+
+        // Modo Día / Noche
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             const themeBtn = document.getElementById('themeBtn');
-            if (document.body.classList.contains('light-mode')) {
-                themeBtn.innerHTML = '<i class="fas fa-moon"></i>';
-            } else {
-                themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
-            }
+            themeBtn.innerHTML = document.body.classList.contains('light-mode') ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
         }
 
         // Navegación Pestañas
@@ -438,6 +530,149 @@
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             element.classList.add('active');
+        }
+
+        // Cargar Datos del Backend
+        function cargarDatos() {
+            fetch(scriptURL)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        dbVentas = data.ventas || [];
+                        dbGastos = data.gastos || [];
+                        renderizarListas();
+                        actualizarDashboard();
+                    }
+                })
+                .catch(err => console.log("Cargando modo offline o sin datos aún:", err));
+        }
+
+        // Filtros del Dashboard
+        function setFiltro(tipo, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('calendarPicker').value = '';
+            btn.classList.add('active');
+            filtroActual = tipo;
+            fechaSeleccionada = null;
+            actualizarDashboard();
+        }
+
+        // Actualizar Dashboard Dinámicamente
+        function actualizarDashboard() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const mesActual = hoy.substring(0, 7);
+
+            let ventasFiltradas = dbVentas.filter(v => {
+                let f = String(v.fecha).split('T')[0].split(' ')[0];
+                if (filtroActual === 'hoy') return f === hoy;
+                if (filtroActual === 'mes') return f.startsWith(mesActual);
+                if (filtroActual === 'fecha') return f === fechaSeleccionada;
+                return true;
+            });
+
+            let gastosFiltrados = dbGastos.filter(g => {
+                let f = String(g.fecha).split('T')[0].split(' ')[0];
+                if (filtroActual === 'hoy') return f === hoy;
+                if (filtroActual === 'mes') return f.startsWith(mesActual);
+                if (filtroActual === 'fecha') return f === fechaSeleccionada;
+                return true;
+            });
+
+            // Sumatorias del periodo filtrado
+            let recaudoFiltrado = ventasFiltradas.reduce((sum, v) => sum + v.precio_venta, 0);
+            let gananciaFiltrada = ventasFiltradas.reduce((sum, v) => sum + v.ganancia, 0);
+            let gastosFiltradosMonto = gastosFiltrados.reduce((sum, g) => sum + g.monto, 0);
+
+            // Totales globales (Base Excel + Todo lo nuevo)
+            let recaudoTotal = BASE_RECAUDO + dbVentas.reduce((sum, v) => sum + v.precio_venta, 0);
+            let gastosTotalesGlobal = dbGastos.reduce((sum, g) => sum + g.monto, 0);
+            let gananciaTotalGlobal = dbVentas.reduce((sum, v) => sum + v.ganancia, 0);
+            
+            let flujoReal = BASE_FLUJO + dbVentas.reduce((sum, v) => sum + v.precio_venta, 0) - gastosTotalesGlobal;
+            let equilibrioReal = BASE_EQUILIBRIO + gananciaTotalGlobal - gastosTotalesGlobal;
+
+            // Actualizar Tarjetas
+            if (filtroActual === 'todos') {
+                document.getElementById('dashVentas').innerText = '$' + recaudoTotal.toLocaleString('es-CO');
+                document.getElementById('dashGanancia').innerText = '$' + gananciaTotalGlobal.toLocaleString('es-CO');
+                document.getElementById('dashGastos').innerText = '$' + gastosTotalesGlobal.toLocaleString('es-CO');
+            } else {
+                document.getElementById('dashVentas').innerText = '$' + recaudoFiltrado.toLocaleString('es-CO');
+                document.getElementById('dashGanancia').innerText = '$' + gananciaFiltrada.toLocaleString('es-CO');
+                document.getElementById('dashGastos').innerText = '$' + gastosFiltradosMonto.toLocaleString('es-CO');
+            }
+
+            document.getElementById('dashFlujo').innerText = '$' + flujoReal.toLocaleString('es-CO');
+            document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
+            document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
+
+            renderizarGrafico(ventasFiltradas);
+        }
+
+        function renderizarListas() {
+            const listaV = document.getElementById('listaVentas');
+            listaV.innerHTML = dbVentas.length ? '' : '<p style="color: var(--text-muted); font-size: 13px; text-align: center;">Sin registros.</p>';
+            [...dbVentas].reverse().forEach(v => {
+                listaV.innerHTML += `
+                    <div class="item-row">
+                        <div>
+                            <strong style="font-size: 13px;">${v.producto}</strong>
+                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${v.fecha.split('T')[0]} | Margen: ${v.margen}</span>
+                        </div>
+                        <div style="color: var(--gold); font-weight: bold;">+$${v.precio_venta.toLocaleString('es-CO')}</div>
+                    </div>`;
+            });
+
+            const listaG = document.getElementById('listaGastos');
+            listaG.innerHTML = dbGastos.length ? '' : '<p style="color: var(--text-muted); font-size: 13px; text-align: center;">Sin gastos.</p>';
+            [...dbGastos].reverse().forEach(g => {
+                listaG.innerHTML += `
+                    <div class="item-row gasto">
+                        <div>
+                            <strong style="font-size: 13px;">${g.concepto}</strong>
+                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${g.fecha.split('T')[0]} | ${g.categoria}</span>
+                        </div>
+                        <div style="color: var(--red); font-weight: bold;">-$${g.monto.toLocaleString('es-CO')}</div>
+                    </div>`;
+            });
+        }
+
+        // Gráfico Dinámico
+        function renderizarGrafico(ventasArray) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            let labels = ventasArray.map(v => String(v.fecha).split('T')[0]).slice(-10);
+            let data = ventasArray.map(v => v.precio_venta).slice(-10);
+
+            if (!labels.length) {
+                labels = ['Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Base Excel'];
+                data = [5000000, 13000000, 20500000, 32500000, 41500000, 48126400];
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ventas ($)',
+                        data: data,
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#aaa' } } },
+                    scales: {
+                        y: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                        x: { ticks: { color: '#aaa' }, grid: { color: '#333' } }
+                    }
+                }
+            });
         }
 
         // Cálculos Venta
@@ -450,11 +685,9 @@
         function calcularMargen() {
             const costo = parseFloat(costoInput.value);
             const precio = parseFloat(precioInput.value);
-
             if (costo > 0 && precio > 0) {
                 gananciaCalculada = precio - costo;
                 margenCalculado = ((gananciaCalculada / precio) * 100).toFixed(1);
-
                 document.getElementById('gananciaNeta').innerText = '$' + gananciaCalculada.toLocaleString('es-CO');
                 document.getElementById('margenPorcentaje').innerText = margenCalculado + '%';
                 document.getElementById('gananciaNeta').style.color = gananciaCalculada >= 0 ? 'var(--green)' : 'var(--red)';
@@ -466,144 +699,61 @@
         costoInput.addEventListener('input', calcularMargen);
         precioInput.addEventListener('input', calcularMargen);
 
-        // Envío de Venta
+        // Enviar Venta
         function registrarVenta() {
+            const fechaManual = document.getElementById('fechaVentaManual').value;
             const prod = document.getElementById('producto').value;
             const costo = parseFloat(costoInput.value);
             const precio = parseFloat(precioInput.value);
-            
-            if(!prod || !costo || !precio) {
-                alert("Completa todos los campos de la venta.");
-                return;
-            }
+            if (!prod || !costo || !precio) return alert("Completa los datos de la venta.");
 
             const btn = document.getElementById('btnVenta');
-            btn.innerText = "Guardando en BD...";
-            btn.disabled = true;
+            btn.innerText = "Guardando..."; btn.disabled = true;
 
             const payload = {
-                tipo: 'venta',
-                producto: prod,
-                costo: costo,
-                precio_venta: precio,
-                ganancia: gananciaCalculada,
-                margen: margenCalculado + "%"
+                tipo: 'venta', fechaManual: fechaManual, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%"
             };
 
-            fetch(scriptURL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(() => {
-                alert("Venta registrada con éxito.");
-                const lista = document.getElementById('listaVentas');
-                if(lista.innerHTML.includes('Sin registros')) lista.innerHTML = '';
-
-                const item = document.createElement('div');
-                item.className = 'item-row';
-                item.innerHTML = `
-                    <div>
-                        <strong style="font-size: 13px;">${prod}</strong>
-                        <span style="display:block; font-size: 11px; color: var(--text-muted);">Margen: ${margenCalculado}%</span>
-                    </div>
-                    <div style="color: var(--gold); font-weight: bold;">+$${precio.toLocaleString('es-CO')}</div>
-                `;
-                lista.prepend(item);
-
+                alert("Venta guardada.");
+                dbVentas.push({ fecha: fechaManual, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" });
+                renderizarListas();
+                actualizarDashboard();
                 document.getElementById('saleForm').reset();
+                document.getElementById('fechaVentaManual').value = todayStr;
                 calcBox.style.display = 'none';
-                btn.innerText = "Guardar Venta";
-                btn.disabled = false;
-            })
-            .catch(() => {
-                alert("Error al conectar con la base de datos.");
-                btn.innerText = "Guardar Venta";
-                btn.disabled = false;
+                btn.innerText = "Guardar Venta"; btn.disabled = false;
             });
         }
 
-        // Envío de Gasto
+        // Enviar Gasto
         function registrarGasto() {
+            const fechaManual = document.getElementById('fechaGastoManual').value;
             const cat = document.getElementById('categoriaGasto').value;
             const concepto = document.getElementById('conceptoGasto').value;
             const monto = parseFloat(document.getElementById('montoGasto').value);
-
-            if(!concepto || !monto) {
-                alert("Por favor ingresa concepto y monto del gasto.");
-                return;
-            }
+            if (!concepto || !monto) return alert("Ingresa concepto y monto.");
 
             const btn = document.getElementById('btnGasto');
-            btn.innerText = "Registrando Gasto...";
-            btn.disabled = true;
+            btn.innerText = "Guardando..."; btn.disabled = true;
 
-            const payload = {
-                tipo: 'gasto',
-                categoria: cat,
-                concepto: concepto,
-                monto: monto
-            };
+            const payload = { tipo: 'gasto', fechaManual: fechaManual, categoria: cat, concepto: concepto, monto: monto };
 
-            fetch(scriptURL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(() => {
-                alert("Gasto registrado exitosamente.");
-                const lista = document.getElementById('listaGastos');
-                if(lista.innerHTML.includes('Sin gastos')) lista.innerHTML = '';
-
-                const item = document.createElement('div');
-                item.className = 'item-row gasto';
-                item.innerHTML = `
-                    <div>
-                        <strong style="font-size: 13px;">${concepto}</strong>
-                        <span style="display:block; font-size: 11px; color: var(--text-muted);">${cat}</span>
-                    </div>
-                    <div style="color: var(--red); font-weight: bold;">-$${monto.toLocaleString('es-CO')}</div>
-                `;
-                lista.prepend(item);
-
+                alert("Gasto guardado.");
+                dbGastos.push({ fecha: fechaManual, categoria: cat, concepto: concepto, monto: monto });
+                renderizarListas();
+                actualizarDashboard();
                 document.getElementById('gastoForm').reset();
-                btn.innerText = "Guardar Gasto";
-                btn.disabled = false;
-            })
-            .catch(() => {
-                alert("Error al guardar el gasto.");
-                btn.innerText = "Guardar Gasto";
-                btn.disabled = false;
+                document.getElementById('fechaGastoManual').value = todayStr;
+                btn.innerText = "Guardar Gasto"; btn.disabled = false;
             });
         }
 
-        // Gráfico de Tendencia
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Actual'],
-                datasets: [{
-                    label: 'Ingresos Acumulados ($)',
-                    data: [5000000, 13000000, 20500000, 32500000, 41500000, 48126400],
-                    borderColor: '#d4af37',
-                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { labels: { color: '#aaa' } } },
-                scales: {
-                    y: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
-                    x: { ticks: { color: '#aaa' }, grid: { color: '#333' } }
-                }
-            }
-        });
+        // Cargar datos al iniciar
+        cargarDatos();
     </script>
 </body>
 </html>
