@@ -3,18 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spartan Fitness - Gestor de Inventario y Ventas</title>
+    <title>Spartan Fitness - Gestor de Operaciones</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --black: #111111;
-            --dark-gray: #1a1a1a;
+            --bg-color: #111111;
+            --card-bg: #1a1a1a;
+            --text-color: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #333333;
             --gold: #d4af37;
-            --light-gold: #f3e5ab;
-            --white: #ffffff;
+            --input-bg: #222222;
             --red: #ff4c4c;
             --green: #4caf50;
+        }
+
+        body.light-mode {
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-color: #111111;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --gold: #b8860b;
+            --input-bg: #f0f0f0;
+            --red: #d32f2f;
+            --green: #2e7d32;
         }
         
         * {
@@ -22,19 +36,20 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         body {
-            background-color: var(--black);
-            color: var(--white);
-            padding-bottom: 70px; /* Para el menú móvil */
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 75px;
         }
 
         header {
-            background-color: var(--dark-gray);
-            padding: 15px 20px;
+            background-color: var(--card-bg);
+            padding: 12px 20px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid var(--gold);
             position: sticky;
@@ -42,12 +57,33 @@
             z-index: 100;
         }
 
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-img {
+            height: 38px;
+            width: auto;
+            object-fit: contain;
+        }
+
         .logo-text {
             color: var(--gold);
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 800;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--gold);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
         }
 
         .container {
@@ -66,43 +102,42 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         h2 {
             color: var(--gold);
-            margin-bottom: 20px;
-            font-size: 20px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
         }
 
-        /* Tarjetas del Dashboard */
         .card-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 20px;
         }
 
         .card {
-            background-color: var(--dark-gray);
-            padding: 15px;
+            background-color: var(--card-bg);
+            padding: 14px;
             border-radius: 8px;
-            border: 1px solid #333;
+            border: 1px solid var(--border-color);
             text-align: center;
         }
 
         .card h3 {
-            font-size: 12px;
-            color: #aaa;
+            font-size: 11px;
+            color: var(--text-muted);
             margin-bottom: 5px;
             text-transform: uppercase;
         }
 
         .card .value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--gold);
         }
@@ -111,23 +146,22 @@
         .card .value.positive { color: var(--green); }
 
         .chart-container {
-            background-color: var(--dark-gray);
+            background-color: var(--card-bg);
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #333;
+            border: 1px solid var(--border-color);
             margin-bottom: 20px;
         }
 
-        /* Formularios */
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #ccc;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
         input[type="text"],
@@ -135,11 +169,11 @@
         select {
             width: 100%;
             padding: 12px;
-            background-color: #222;
-            border: 1px solid #444;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
-            color: white;
-            font-size: 16px;
+            color: var(--text-color);
+            font-size: 15px;
         }
 
         input:focus, select:focus {
@@ -149,17 +183,16 @@
 
         .btn {
             background-color: var(--gold);
-            color: var(--black);
+            color: #111;
             border: none;
-            padding: 15px;
+            padding: 14px;
             width: 100%;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
             text-transform: uppercase;
             margin-top: 10px;
-            transition: 0.3s;
         }
 
         .btn:disabled {
@@ -168,36 +201,31 @@
             cursor: not-allowed;
         }
 
-        .btn:active:not(:disabled) {
-            background-color: #b8962e;
-        }
-
-        /* Caja de Resultados */
         .result-box {
-            background-color: #222;
-            padding: 15px;
+            background-color: var(--input-bg);
+            padding: 12px;
             border-radius: 6px;
-            margin-top: 15px;
+            margin-top: 12px;
             border-left: 4px solid var(--gold);
         }
 
         .result-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
+            font-size: 14px;
+            margin-bottom: 4px;
         }
 
-        /* Navegación Móvil */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: var(--dark-gray);
+            background-color: var(--card-bg);
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
-            border-top: 1px solid #333;
+            padding: 8px 0;
+            border-top: 1px solid var(--border-color);
             z-index: 100;
         }
 
@@ -205,65 +233,78 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: #888;
+            color: var(--text-muted);
             text-decoration: none;
-            font-size: 12px;
-            padding: 5px 15px;
+            font-size: 11px;
+            padding: 4px 10px;
             cursor: pointer;
         }
 
         .nav-item i {
-            font-size: 20px;
-            margin-bottom: 5px;
+            font-size: 18px;
+            margin-bottom: 3px;
         }
 
         .nav-item.active {
             color: var(--gold);
         }
         
-        .recent-sales {
-            margin-top: 20px;
+        .recent-list {
+            margin-top: 15px;
         }
-        .sale-item {
-            background: var(--dark-gray);
+        .item-row {
+            background: var(--card-bg);
             padding: 10px;
             border-radius: 6px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-left: 3px solid var(--gold);
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .item-row.gasto {
+            border-left-color: var(--red);
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-text"><i class="fas fa-helmet-safety"></i> SPARTAN FITNESS</div>
+        <div class="logo-container">
+            <img src="logo.jpg" alt="Spartan Helmet" class="logo-img" onerror="this.style.display='none'; document.getElementById('helmet-icon').style.display='inline-block';">
+            <i id="helmet-icon" class="fas fa-shield-halved" style="display:none; color: var(--gold); font-size: 22px;"></i>
+            <div class="logo-text">SPARTAN FITNESS</div>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+            <i class="fas fa-sun"></i>
+        </button>
     </header>
 
     <div class="container">
         
-        <!-- SECCIÓN DASHBOARD -->
+        <!-- DASHBOARD -->
         <section id="dashboard" class="section active">
-            <h2>Resumen Financiero Actual</h2>
+            <h2>Estado Financiero General</h2>
             
             <div class="card-grid">
                 <div class="card">
-                    <h3>Total Ventas (Recaudo)</h3>
-                    <div class="value">$48,126,400</div>
+                    <h3>Recaudo Ventas</h3>
+                    <div class="value" id="dashVentas">$48,126,400</div>
                 </div>
                 <div class="card">
-                    <h3>Pedidos Totales</h3>
-                    <div class="value">494</div>
+                    <h3>Gastos Totales</h3>
+                    <div class="value negative" id="dashGastos">$0</div>
                 </div>
                 <div class="card">
-                    <h3>Flujo de Caja Disp.</h3>
-                    <div class="value">$5,013,000</div>
+                    <h3>Flujo de Caja Real</h3>
+                    <div class="value positive" id="dashFlujo">$5,013,000</div>
                 </div>
                 <div class="card">
-                    <h3>Falta p/ Punto Equilibrio</h3>
-                    <div class="value negative">-$4,717,927</div>
+                    <h3>Punto de Equilibrio</h3>
+                    <div class="value negative" id="dashEquilibrio">-$4,717,927</div>
                 </div>
             </div>
 
@@ -272,25 +313,21 @@
             </div>
         </section>
 
-        <!-- SECCIÓN REGISTRAR VENTA -->
+        <!-- VENTAS -->
         <section id="ventas" class="section">
             <h2>Registrar Nueva Venta</h2>
-            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Los datos se guardarán automáticamente en tu base de datos de Google Sheets.</p>
-            
             <form id="saleForm">
                 <div class="form-group">
                     <label>Producto / Referencia</label>
-                    <input type="text" id="producto" placeholder="Ej: Casco Spartan Talla L" required>
+                    <input type="text" id="producto" placeholder="Ej: Camiseta Oversize Talla M" required>
                 </div>
-                
                 <div class="form-group">
-                    <label>Costo Inicial del Producto ($)</label>
-                    <input type="number" id="costo" placeholder="Ej: 50000" required>
+                    <label>Costo Inicial ($)</label>
+                    <input type="number" id="costo" placeholder="Ej: 35000" required>
                 </div>
-
                 <div class="form-group">
-                    <label>Precio Final de Venta ($)</label>
-                    <input type="number" id="precioVenta" placeholder="Ej: 120000" required>
+                    <label>Precio Final Venta ($)</label>
+                    <input type="number" id="precioVenta" placeholder="Ej: 75000" required>
                 </div>
 
                 <div class="result-box" id="calcBox" style="display: none;">
@@ -304,30 +341,64 @@
                     </div>
                 </div>
 
-                <button type="button" id="btnGuardar" class="btn" onclick="registrarVenta()">Guardar Venta</button>
+                <button type="button" id="btnVenta" class="btn" onclick="registrarVenta()">Guardar Venta</button>
             </form>
 
-            <div class="recent-sales">
-                <h2>Ventas Registradas en esta sesión</h2>
+            <div class="recent-list">
+                <h2>Últimas Ventas</h2>
                 <div id="listaVentas">
-                    <p style="color: #666; font-size: 14px; text-align: center;">No hay ventas registradas aún.</p>
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Sin registros en esta sesión.</p>
                 </div>
             </div>
         </section>
 
-        <!-- SECCIÓN INVENTARIO -->
+        <!-- GASTOS -->
+        <section id="gastos" class="section">
+            <h2>Registrar Gasto / Recompra</h2>
+            <form id="gastoForm">
+                <div class="form-group">
+                    <label>Categoría del Gasto</label>
+                    <select id="categoriaGasto">
+                        <option value="Recompra de Mercancía">Recompra de Mercancía</option>
+                        <option value="Envíos / Transportes">Envíos / Transportes</option>
+                        <option value="Publicidad / Marketing">Publicidad / Marketing</option>
+                        <option value="Empaques / Etiquetas">Empaques / Etiquetas</option>
+                        <option value="Otro Operativo">Otro Operativo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Concepto / Detalle</label>
+                    <input type="text" id="conceptoGasto" placeholder="Ej: Pago lote 10 Tops Leggings" required>
+                </div>
+                <div class="form-group">
+                    <label>Monto del Gasto ($)</label>
+                    <input type="number" id="montoGasto" placeholder="Ej: 450000" required>
+                </div>
+
+                <button type="button" id="btnGasto" class="btn" onclick="registrarGasto()">Guardar Gasto</button>
+            </form>
+
+            <div class="recent-list">
+                <h2>Últimos Gastos</h2>
+                <div id="listaGastos">
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Sin gastos registrados hoy.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- INVENTARIO -->
         <section id="inventario" class="section">
-            <h2>Inventario Rápido</h2>
-            <div style="text-align: center; padding: 40px 20px; background: var(--dark-gray); border-radius: 8px;">
-                <i class="fas fa-boxes" style="font-size: 40px; color: var(--gold); margin-bottom: 15px;"></i>
-                <h3>Control de Stock (Próximamente)</h3>
-                <p style="color: #888; font-size: 14px; margin-top: 10px;">En la siguiente versión activaremos la cámara para escanear productos y actualizar unidades instantáneamente.</p>
+            <h2>Gestión de Stock</h2>
+            <div style="text-align: center; padding: 40px 20px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);">
+                <i class="fas fa-camera" style="font-size: 36px; color: var(--gold); margin-bottom: 12px;"></i>
+                <h3>Escaner de Unidades</h3>
+                <p style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">En el próximo paso conectaremos la cámara para captura rápida de productos unitarios.</p>
             </div>
         </section>
 
     </div>
 
-    <!-- MENÚ DE NAVEGACIÓN INFERIOR -->
+    <!-- MENÚ INFERIOR -->
     <div class="bottom-nav">
         <div class="nav-item active" onclick="showSection('dashboard', this)">
             <i class="fas fa-chart-pie"></i>
@@ -335,7 +406,11 @@
         </div>
         <div class="nav-item" onclick="showSection('ventas', this)">
             <i class="fas fa-plus-circle"></i>
-            <span>Vender</span>
+            <span>Ventas</span>
+        </div>
+        <div class="nav-item" onclick="showSection('gastos', this)">
+            <i class="fas fa-minus-circle"></i>
+            <span>Gastos</span>
         </div>
         <div class="nav-item" onclick="showSection('inventario', this)">
             <i class="fas fa-box"></i>
@@ -344,19 +419,28 @@
     </div>
 
     <script>
-        // URL DE TU GOOGLE APPS SCRIPT BACKEND
         const scriptURL = 'https://script.google.com/macros/s/AKfycbx4Opo5e5Q7wOpXvso_llhfyPV_jrv4XSrOnN2lgfqHp1z2D1VTpzmVWcWccy-f1jDv/exec';
 
-        // Lógica de Navegación
+        // Lógica Modo Día / Noche
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const themeBtn = document.getElementById('themeBtn');
+            if (document.body.classList.contains('light-mode')) {
+                themeBtn.innerHTML = '<i class="fas fa-moon"></i>';
+            } else {
+                themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+
+        // Navegación Pestañas
         function showSection(sectionId, element) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            
             document.getElementById(sectionId).classList.add('active');
             element.classList.add('active');
         }
 
-        // Lógica de Cálculo de Margen
+        // Cálculos Venta
         const costoInput = document.getElementById('costo');
         const precioInput = document.getElementById('precioVenta');
         const calcBox = document.getElementById('calcBox');
@@ -373,35 +457,32 @@
 
                 document.getElementById('gananciaNeta').innerText = '$' + gananciaCalculada.toLocaleString('es-CO');
                 document.getElementById('margenPorcentaje').innerText = margenCalculado + '%';
-                
                 document.getElementById('gananciaNeta').style.color = gananciaCalculada >= 0 ? 'var(--green)' : 'var(--red)';
-                
                 calcBox.style.display = 'block';
             } else {
                 calcBox.style.display = 'none';
             }
         }
-
         costoInput.addEventListener('input', calcularMargen);
         precioInput.addEventListener('input', calcularMargen);
 
-        // FUNCIÓN PARA ENVIAR DATOS A GOOGLE SHEETS
+        // Envío de Venta
         function registrarVenta() {
             const prod = document.getElementById('producto').value;
             const costo = parseFloat(costoInput.value);
             const precio = parseFloat(precioInput.value);
             
             if(!prod || !costo || !precio) {
-                alert("Por favor completa todos los campos del formulario.");
+                alert("Completa todos los campos de la venta.");
                 return;
             }
 
-            const btn = document.getElementById('btnGuardar');
-            btn.innerText = "Guardando en Base de Datos...";
+            const btn = document.getElementById('btnVenta');
+            btn.innerText = "Guardando en BD...";
             btn.disabled = true;
 
-            // Datos a enviar a Google Sheets
             const payload = {
+                tipo: 'venta',
                 producto: prod,
                 costo: costo,
                 precio_venta: precio,
@@ -411,70 +492,112 @@
 
             fetch(scriptURL, {
                 method: 'POST',
-                mode: 'no-cors', // Evita errores de CORS en el navegador
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
-            .then(response => {
-                // Al ser no-cors, asumimos que llegó si no hubo error de red
-                alert("¡Venta guardada exitosamente en Google Sheets!");
-                
-                // Agregar visualmente a la lista local
+            .then(() => {
+                alert("Venta registrada con éxito.");
                 const lista = document.getElementById('listaVentas');
-                if(lista.innerHTML.includes('No hay ventas')) {
-                    lista.innerHTML = '';
-                }
+                if(lista.innerHTML.includes('Sin registros')) lista.innerHTML = '';
 
                 const item = document.createElement('div');
-                item.className = 'sale-item';
+                item.className = 'item-row';
                 item.innerHTML = `
                     <div>
-                        <strong style="display:block; font-size: 14px;">${prod}</strong>
-                        <span style="font-size: 12px; color: #888;">Margen: ${margenCalculado}%</span>
+                        <strong style="font-size: 13px;">${prod}</strong>
+                        <span style="display:block; font-size: 11px; color: var(--text-muted);">Margen: ${margenCalculado}%</span>
                     </div>
-                    <div style="color: var(--gold); font-weight: bold;">
-                        $${precio.toLocaleString('es-CO')}
-                    </div>
+                    <div style="color: var(--gold); font-weight: bold;">+$${precio.toLocaleString('es-CO')}</div>
                 `;
                 lista.prepend(item);
-                
-                // Limpiar el formulario y resetear botones
+
                 document.getElementById('saleForm').reset();
                 calcBox.style.display = 'none';
                 btn.innerText = "Guardar Venta";
                 btn.disabled = false;
             })
-            .catch(error => {
-                console.error('Error!', error.message);
-                alert("Hubo un error al guardar. Revisa tu conexión a internet.");
+            .catch(() => {
+                alert("Error al conectar con la base de datos.");
                 btn.innerText = "Guardar Venta";
                 btn.disabled = false;
             });
         }
 
-        // Gráfico con Chart.js
+        // Envío de Gasto
+        function registrarGasto() {
+            const cat = document.getElementById('categoriaGasto').value;
+            const concepto = document.getElementById('conceptoGasto').value;
+            const monto = parseFloat(document.getElementById('montoGasto').value);
+
+            if(!concepto || !monto) {
+                alert("Por favor ingresa concepto y monto del gasto.");
+                return;
+            }
+
+            const btn = document.getElementById('btnGasto');
+            btn.innerText = "Registrando Gasto...";
+            btn.disabled = true;
+
+            const payload = {
+                tipo: 'gasto',
+                categoria: cat,
+                concepto: concepto,
+                monto: monto
+            };
+
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                alert("Gasto registrado exitosamente.");
+                const lista = document.getElementById('listaGastos');
+                if(lista.innerHTML.includes('Sin gastos')) lista.innerHTML = '';
+
+                const item = document.createElement('div');
+                item.className = 'item-row gasto';
+                item.innerHTML = `
+                    <div>
+                        <strong style="font-size: 13px;">${concepto}</strong>
+                        <span style="display:block; font-size: 11px; color: var(--text-muted);">${cat}</span>
+                    </div>
+                    <div style="color: var(--red); font-weight: bold;">-$${monto.toLocaleString('es-CO')}</div>
+                `;
+                lista.prepend(item);
+
+                document.getElementById('gastoForm').reset();
+                btn.innerText = "Guardar Gasto";
+                btn.disabled = false;
+            })
+            .catch(() => {
+                alert("Error al guardar el gasto.");
+                btn.innerText = "Guardar Gasto";
+                btn.disabled = false;
+            });
+        }
+
+        // Gráfico de Tendencia
         const ctx = document.getElementById('salesChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Mes 6'],
+                labels: ['Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Actual'],
                 datasets: [{
-                    label: 'Ingresos Históricos',
-                    data: [5000000, 8000000, 7500000, 12000000, 9000000, 6626400],
+                    label: 'Ingresos Acumulados ($)',
+                    data: [5000000, 13000000, 20500000, 32500000, 41500000, 48126400],
                     borderColor: '#d4af37',
                     backgroundColor: 'rgba(212, 175, 55, 0.1)',
                     borderWidth: 2,
                     fill: true,
-                    tension: 0.4
+                    tension: 0.3
                 }]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: { labels: { color: '#fff' } }
-                },
+                plugins: { legend: { labels: { color: '#aaa' } } },
                 scales: {
                     y: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
                     x: { ticks: { color: '#aaa' }, grid: { color: '#333' } }
