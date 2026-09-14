@@ -807,7 +807,19 @@
                         dbVentas[index] = { rowId: parseInt(rowId), fecha: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" };
                     }
                 } else {
-                    dbVentas.push({ fecha: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" });
+                    const maxRowId = dbVentas.length > 0 ? Math.max(...dbVentas.map(v => v.rowId || 0)) : 1;
+                    const nuevoRowId = maxRowId > 0 ? maxRowId + 1 : dbVentas.length + 2;
+
+                    dbVentas.push({ 
+                        rowId: nuevoRowId, 
+                        fecha: fechaManual, 
+                        banco: banco, 
+                        producto: prod, 
+                        costo: costo, 
+                        precio_venta: precio, 
+                        ganancia: gananciaCalculada, 
+                        margen: margenCalculado + "%" 
+                    });
                 }
 
                 renderizarListas();
@@ -820,6 +832,8 @@
                 document.getElementById('bancoDestino').value = "Ava - Daviplata";
                 calcBox.style.display = 'none';
                 btn.innerText = "Guardar Venta"; btn.disabled = false;
+
+                setTimeout(cargarDatos, 2000);
             });
         }
 
