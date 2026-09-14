@@ -392,7 +392,7 @@
                 </div>
                 <div class="card">
                     <h3>Flujo de Caja Real</h3>
-                    <div class="value positive" id="dashFlujo">$5,013,000</div>
+                    <div class="value positive" id="dashFlujo">$7,510,000</div>
                 </div>
                 <div class="card" style="grid-column: span 2;">
                     <h3>Faltante Punto de Equilibrio</h3>
@@ -401,10 +401,10 @@
             </div>
 
             <div class="bank-box">
-                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Recaudo Registrado por Banco</h3>
-                <div class="bank-row"><span>Ava - Daviplata</span><strong id="bancoAvaDavi">$0</strong></div>
-                <div class="bank-row"><span>Ava - Llave</span><strong id="bancoAvaLlave">$0</strong></div>
-                <div class="bank-row"><span>Ava - Nequi</span><strong id="bancoAvaNequi">$0</strong></div>
+                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Saldo Disponible por Banco</h3>
+                <div class="bank-row"><span>Ava - Daviplata</span><strong id="bancoAvaDavi">$599,000</strong></div>
+                <div class="bank-row"><span>Ava - Llave</span><strong id="bancoAvaLlave">$4,396,000</strong></div>
+                <div class="bank-row"><span>Ava - Nequi</span><strong id="bancoAvaNequi">$2,515,000</strong></div>
                 <div class="bank-row"><span>María Paula - Daviplata</span><strong id="bancoMPDavi">$0</strong></div>
                 <div class="bank-row"><span>María Paula - Llave</span><strong id="bancoMPLlave">$0</strong></div>
             </div>
@@ -477,6 +477,16 @@
                     <input type="date" id="fechaGastoManual" required>
                 </div>
                 <div class="form-group">
+                    <label>Cuenta de Origen (Banco de donde sale el dinero)</label>
+                    <select id="bancoGasto">
+                        <option value="Ava - Daviplata" selected>Ava - Daviplata</option>
+                        <option value="Ava - Llave">Ava - Llave</option>
+                        <option value="Ava - Nequi">Ava - Nequi</option>
+                        <option value="María Paula - Daviplata">María Paula - Daviplata</option>
+                        <option value="María Paula - Llave">María Paula - Llave</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Categoría del Gasto</label>
                     <select id="categoriaGasto">
                         <option value="Recompra de Mercancía">Recompra de Mercancía</option>
@@ -542,8 +552,14 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbx4Opo5e5Q7wOpXvso_llhfyPV_jrv4XSrOnN2lgfqHp1z2D1VTpzmVWcWccy-f1jDv/exec';
 
         const BASE_RECAUDO = 48126400;
-        const BASE_FLUJO = 5013000;
         const BASE_EQUILIBRIO = -4717927.91;
+
+        // Distribución Base Inicial ($7,510,000 exactos)
+        const BASE_AVA_DAVI = 599000;
+        const BASE_AVA_LLAVE = 4396000;
+        const BASE_AVA_NEQUI = 2515000;
+        const BASE_MP_DAVI = 0;
+        const BASE_MP_LLAVE = 0;
 
         let dbVentas = [];
         let dbGastos = [];
@@ -580,6 +596,8 @@
         }
 
         function cargarDatos() {
+            if (document.getElementById('editRowId').value !== "") return;
+
             fetch(scriptURL)
                 .then(res => res.json())
                 .then(data => {
@@ -629,8 +647,18 @@
             let recaudoTotal = BASE_RECAUDO + dbVentas.reduce((sum, v) => sum + v.precio_venta, 0);
             let gastosTotalesGlobal = dbGastos.reduce((sum, g) => sum + g.monto, 0);
             let gananciaTotalGlobal = dbVentas.reduce((sum, v) => sum + v.ganancia, 0);
-            
-            let flujoReal = BASE_FLUJO + dbVentas.reduce((sum, v) => sum + v.precio_venta, 0) - gastosTotalesGlobal;
+
+            // CÁLCULO DE SALDO DISPONIBLE NETO POR BANCO (Solo se suman ventas que tengan banco asignado)
+            const getIngresos = (banco) => dbVentas.filter(v => v.banco === banco).reduce((s, v) => s + v.precio_venta, 0);
+            const getEgresos = (banco) => dbGastos.filter(g => g.banco === banco).reduce((s, g) => s + g.monto, 0);
+
+            let saldoAvaDavi = BASE_AVA_DAVI + getIngresos("Ava - Daviplata") - getEgresos("Ava - Daviplata");
+            let saldoAvaLlave = BASE_AVA_LLAVE + getIngresos("Ava - Llave") - getEgresos("Ava - Llave");
+            let saldoAvaNequi = BASE_AVA_NEQUI + getIngresos("Ava - Nequi") - getEgresos("Ava - Nequi");
+            let saldoMPDavi = BASE_MP_DAVI + getIngresos("María Paula - Daviplata") - getEgresos("María Paula - Daviplata");
+            let saldoMPLlave = BASE_MP_LLAVE + getIngresos("María Paula - Llave") + getIngresos("María Paula - La Llave") - getEgresos("María Paula - Llave") - getEgresos("María Paula - La Llave");
+
+            let flujoReal = saldoAvaDavi + saldoAvaLlave + saldoAvaNequi + saldoMPDavi + saldoMPLlave;
             let equilibrioReal = BASE_EQUILIBRIO + gananciaTotalGlobal - gastosTotalesGlobal;
 
             if (filtroActual === 'todos') {
@@ -647,17 +675,11 @@
             document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
             document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
 
-            let sumAvaDavi = ventasFiltradas.filter(v => (v.banco || "Ava - Daviplata") === "Ava - Daviplata").reduce((s, v) => s + v.precio_venta, 0);
-            let sumAvaLlave = ventasFiltradas.filter(v => v.banco === "Ava - Llave").reduce((s, v) => s + v.precio_venta, 0);
-            let sumAvaNequi = ventasFiltradas.filter(v => v.banco === "Ava - Nequi").reduce((s, v) => s + v.precio_venta, 0);
-            let sumMPDavi = ventasFiltradas.filter(v => v.banco === "María Paula - Daviplata").reduce((s, v) => s + v.precio_venta, 0);
-            let sumMPLlave = ventasFiltradas.filter(v => (v.banco === "María Paula - Llave" || v.banco === "María Paula - La Llave")).reduce((s, v) => s + v.precio_venta, 0);
-
-            document.getElementById('bancoAvaDavi').innerText = '$' + sumAvaDavi.toLocaleString('es-CO');
-            document.getElementById('bancoAvaLlave').innerText = '$' + sumAvaLlave.toLocaleString('es-CO');
-            document.getElementById('bancoAvaNequi').innerText = '$' + sumAvaNequi.toLocaleString('es-CO');
-            document.getElementById('bancoMPDavi').innerText = '$' + sumMPDavi.toLocaleString('es-CO');
-            document.getElementById('bancoMPLlave').innerText = '$' + sumMPLlave.toLocaleString('es-CO');
+            document.getElementById('bancoAvaDavi').innerText = '$' + saldoAvaDavi.toLocaleString('es-CO');
+            document.getElementById('bancoAvaLlave').innerText = '$' + saldoAvaLlave.toLocaleString('es-CO');
+            document.getElementById('bancoAvaNequi').innerText = '$' + saldoAvaNequi.toLocaleString('es-CO');
+            document.getElementById('bancoMPDavi').innerText = '$' + saldoMPDavi.toLocaleString('es-CO');
+            document.getElementById('bancoMPLlave').innerText = '$' + saldoMPLlave.toLocaleString('es-CO');
 
             renderizarGrafico(ventasFiltradas);
         }
@@ -671,7 +693,7 @@
                         <div>
                             <strong style="font-size: 13px;">${v.producto}</strong>
                             <span style="display:block; font-size: 11px; color: var(--text-muted);">${String(v.fecha).split('T')[0]} | Margen: ${v.margen}</span>
-                            <span class="bank-badge"><i class="fas fa-building-columns"></i> ${v.banco || 'Ava - Daviplata'}</span>
+                            <span class="bank-badge"><i class="fas fa-building-columns"></i> ${v.banco || 'Histórico'}</span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div style="color: var(--gold); font-weight: bold;">+$${v.precio_venta.toLocaleString('es-CO')}</div>
@@ -688,6 +710,7 @@
                         <div>
                             <strong style="font-size: 13px;">${g.concepto}</strong>
                             <span style="display:block; font-size: 11px; color: var(--text-muted);">${String(g.fecha).split('T')[0]} | ${g.categoria}</span>
+                            <span class="bank-badge" style="color: var(--red); border-color: var(--red);"><i class="fas fa-arrow-down-short-wide"></i> ${g.banco || 'Ava - Daviplata'}</span>
                         </div>
                         <div style="color: var(--red); font-weight: bold;">-$${g.monto.toLocaleString('es-CO')}</div>
                     </div>`;
@@ -754,6 +777,21 @@
         costoInput.addEventListener('input', calcularMargen);
         precioInput.addEventListener('input', calcularMargen);
 
+        function cancelarEdicion() {
+            document.getElementById('saleForm').reset();
+            document.getElementById('editRowId').value = "";
+            document.getElementById('tituloFormVenta').innerText = "Registrar Nueva Venta";
+            document.getElementById('fechaVentaManual').value = todayStr;
+            document.getElementById('bancoDestino').value = "Ava - Daviplata";
+            calcBox.style.display = 'none';
+            
+            const btn = document.getElementById('btnVenta');
+            btn.innerText = "Guardar Venta";
+            
+            const btnCancel = document.getElementById('btnCancelarEdicion');
+            if (btnCancel) btnCancel.remove();
+        }
+
         function cargarEdicionVenta(rowId) {
             const v = dbVentas.find(item => item.rowId === rowId);
             if (!v) return;
@@ -767,7 +805,22 @@
             
             calcularMargen();
             document.getElementById('tituloFormVenta').innerText = "Editar Venta (#" + rowId + ")";
-            document.getElementById('btnVenta').innerText = "Actualizar Venta";
+            
+            const btnVenta = document.getElementById('btnVenta');
+            btnVenta.innerText = "Actualizar Venta";
+
+            if (!document.getElementById('btnCancelarEdicion')) {
+                const btnCancel = document.createElement('button');
+                btnCancel.type = 'button';
+                btnCancel.id = 'btnCancelarEdicion';
+                btnCancel.className = 'btn';
+                btnCancel.style.backgroundColor = '#555';
+                btnCancel.style.color = '#fff';
+                btnCancel.style.marginTop = '6px';
+                btnCancel.innerText = 'Cancelar Edición';
+                btnCancel.onclick = cancelarEdicion;
+                btnVenta.parentNode.appendChild(btnCancel);
+            }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -822,16 +875,12 @@
                     });
                 }
 
+                cancelarEdicion();
                 renderizarListas();
                 actualizarDashboard();
                 
-                document.getElementById('saleForm').reset();
-                document.getElementById('editRowId').value = "";
-                document.getElementById('tituloFormVenta').innerText = "Registrar Nueva Venta";
-                document.getElementById('fechaVentaManual').value = todayStr;
-                document.getElementById('bancoDestino').value = "Ava - Daviplata";
-                calcBox.style.display = 'none';
-                btn.innerText = "Guardar Venta"; btn.disabled = false;
+                btn.innerText = "Guardar Venta"; 
+                btn.disabled = false;
 
                 setTimeout(cargarDatos, 2000);
             });
@@ -839,6 +888,7 @@
 
         function registrarGasto() {
             const fechaManual = document.getElementById('fechaGastoManual').value;
+            const banco = document.getElementById('bancoGasto').value;
             const cat = document.getElementById('categoriaGasto').value;
             const concepto = document.getElementById('conceptoGasto').value;
             const monto = parseFloat(document.getElementById('montoGasto').value);
@@ -847,16 +897,17 @@
             const btn = document.getElementById('btnGasto');
             btn.innerText = "Guardando..."; btn.disabled = true;
 
-            const payload = { tipo: 'gasto', fechaManual: fechaManual, categoria: cat, concepto: concepto, monto: monto };
+            const payload = { tipo: 'gasto', fechaManual: fechaManual, banco: banco, categoria: cat, concepto: concepto, monto: monto };
 
             fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(() => {
                 alert("Gasto guardado.");
-                dbGastos.push({ fecha: fechaManual, categoria: cat, concepto: concepto, monto: monto });
+                dbGastos.push({ fecha: fechaManual, banco: banco, categoria: cat, concepto: concepto, monto: monto });
                 renderizarListas();
                 actualizarDashboard();
                 document.getElementById('gastoForm').reset();
                 document.getElementById('fechaGastoManual').value = todayStr;
+                document.getElementById('bancoGasto').value = "Ava - Daviplata";
                 btn.innerText = "Guardar Gasto"; btn.disabled = false;
             });
         }
