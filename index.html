@@ -338,6 +338,14 @@
             margin-top: 2px;
             border: 1px solid var(--border-color);
         }
+        .btn-edit {
+            background: none;
+            border: none;
+            color: var(--gold);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 6px 10px;
+        }
     </style>
 </head>
 <body>
@@ -392,29 +400,13 @@
                 </div>
             </div>
 
-            <!-- Desglose por Bancos -->
             <div class="bank-box">
                 <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Recaudo Registrado por Banco</h3>
-                <div class="bank-row">
-                    <span>Ava - Daviplata</span>
-                    <strong id="bancoAvaDavi">$0</strong>
-                </div>
-                <div class="bank-row">
-                    <span>Ava - Llave</span>
-                    <strong id="bancoAvaLlave">$0</strong>
-                </div>
-                <div class="bank-row">
-                    <span>Ava - Nequi</span>
-                    <strong id="bancoAvaNequi">$0</strong>
-                </div>
-                <div class="bank-row">
-                    <span>María Paula - Daviplata</span>
-                    <strong id="bancoMPDavi">$0</strong>
-                </div>
-                <div class="bank-row">
-                    <span>María Paula - Llave</span>
-                    <strong id="bancoMPLlave">$0</strong>
-                </div>
+                <div class="bank-row"><span>Ava - Daviplata</span><strong id="bancoAvaDavi">$0</strong></div>
+                <div class="bank-row"><span>Ava - Llave</span><strong id="bancoAvaLlave">$0</strong></div>
+                <div class="bank-row"><span>Ava - Nequi</span><strong id="bancoAvaNequi">$0</strong></div>
+                <div class="bank-row"><span>María Paula - Daviplata</span><strong id="bancoMPDavi">$0</strong></div>
+                <div class="bank-row"><span>María Paula - Llave</span><strong id="bancoMPLlave">$0</strong></div>
             </div>
 
             <div class="chart-container">
@@ -424,8 +416,9 @@
 
         <!-- VENTAS -->
         <section id="ventas" class="section">
-            <h2>Registrar Nueva Venta</h2>
+            <h2 id="tituloFormVenta">Registrar Nueva Venta</h2>
             <form id="saleForm">
+                <input type="hidden" id="editRowId" value="">
                 <div class="form-group">
                     <label>Fecha de Venta</label>
                     <input type="date" id="fechaVentaManual" required>
@@ -654,7 +647,6 @@
             document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
             document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
 
-            // Conteo por Bancos
             let sumAvaDavi = ventasFiltradas.filter(v => (v.banco || "Ava - Daviplata") === "Ava - Daviplata").reduce((s, v) => s + v.precio_venta, 0);
             let sumAvaLlave = ventasFiltradas.filter(v => v.banco === "Ava - Llave").reduce((s, v) => s + v.precio_venta, 0);
             let sumAvaNequi = ventasFiltradas.filter(v => v.banco === "Ava - Nequi").reduce((s, v) => s + v.precio_venta, 0);
@@ -678,10 +670,13 @@
                     <div class="item-row">
                         <div>
                             <strong style="font-size: 13px;">${v.producto}</strong>
-                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${v.fecha.split('T')[0]} | Margen: ${v.margen}</span>
+                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${String(v.fecha).split('T')[0]} | Margen: ${v.margen}</span>
                             <span class="bank-badge"><i class="fas fa-building-columns"></i> ${v.banco || 'Ava - Daviplata'}</span>
                         </div>
-                        <div style="color: var(--gold); font-weight: bold;">+$${v.precio_venta.toLocaleString('es-CO')}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="color: var(--gold); font-weight: bold;">+$${v.precio_venta.toLocaleString('es-CO')}</div>
+                            ${v.rowId ? `<button class="btn-edit" onclick="cargarEdicionVenta(${v.rowId})"><i class="fas fa-edit"></i></button>` : ''}
+                        </div>
                     </div>`;
             });
 
@@ -692,7 +687,7 @@
                     <div class="item-row gasto">
                         <div>
                             <strong style="font-size: 13px;">${g.concepto}</strong>
-                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${g.fecha.split('T')[0]} | ${g.categoria}</span>
+                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${String(g.fecha).split('T')[0]} | ${g.categoria}</span>
                         </div>
                         <div style="color: var(--red); font-weight: bold;">-$${g.monto.toLocaleString('es-CO')}</div>
                     </div>`;
@@ -759,7 +754,26 @@
         costoInput.addEventListener('input', calcularMargen);
         precioInput.addEventListener('input', calcularMargen);
 
+        function cargarEdicionVenta(rowId) {
+            const v = dbVentas.find(item => item.rowId === rowId);
+            if (!v) return;
+
+            document.getElementById('editRowId').value = v.rowId;
+            document.getElementById('fechaVentaManual').value = String(v.fecha).split('T')[0].split(' ')[0];
+            document.getElementById('bancoDestino').value = v.banco || "Ava - Daviplata";
+            document.getElementById('producto').value = v.producto;
+            document.getElementById('costo').value = v.costo;
+            document.getElementById('precioVenta').value = v.precio_venta;
+            
+            calcularMargen();
+            document.getElementById('tituloFormVenta').innerText = "Editar Venta (#" + rowId + ")";
+            document.getElementById('btnVenta').innerText = "Actualizar Venta";
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function registrarVenta() {
+            const rowId = document.getElementById('editRowId').value;
             const fechaManual = document.getElementById('fechaVentaManual').value;
             const banco = document.getElementById('bancoDestino').value;
             const prod = document.getElementById('producto').value;
@@ -771,16 +785,37 @@
             btn.innerText = "Guardando..."; btn.disabled = true;
 
             const payload = {
-                tipo: 'venta', fechaManual: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%"
+                action: rowId ? 'updateVenta' : 'createVenta',
+                rowId: rowId ? parseInt(rowId) : null,
+                tipo: 'venta',
+                fechaManual: fechaManual,
+                banco: banco,
+                producto: prod,
+                costo: costo,
+                precio_venta: precio,
+                ganancia: gananciaCalculada,
+                margen: margenCalculado + "%"
             };
 
             fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(() => {
-                alert("Venta guardada.");
-                dbVentas.push({ fecha: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" });
+                alert(rowId ? "Venta actualizada exitosamente." : "Venta registrada.");
+                
+                if (rowId) {
+                    const index = dbVentas.findIndex(v => v.rowId === parseInt(rowId));
+                    if (index !== -1) {
+                        dbVentas[index] = { rowId: parseInt(rowId), fecha: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" };
+                    }
+                } else {
+                    dbVentas.push({ fecha: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" });
+                }
+
                 renderizarListas();
                 actualizarDashboard();
+                
                 document.getElementById('saleForm').reset();
+                document.getElementById('editRowId').value = "";
+                document.getElementById('tituloFormVenta').innerText = "Registrar Nueva Venta";
                 document.getElementById('fechaVentaManual').value = todayStr;
                 document.getElementById('bancoDestino').value = "Ava - Daviplata";
                 calcBox.style.display = 'none';
