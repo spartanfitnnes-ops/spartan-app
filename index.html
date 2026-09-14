@@ -6,7 +6,6 @@
     <title>Spartan Fitness - Gestor de Operaciones</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Flatpickr (Calendario de GitHub) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -120,7 +119,6 @@
             padding-bottom: 8px;
         }
 
-        /* Filter Toolbar */
         .filter-card {
             background-color: var(--card-bg);
             padding: 12px;
@@ -193,6 +191,23 @@
 
         .card .value.negative { color: var(--red); }
         .card .value.positive { color: var(--green); }
+
+        .bank-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bank-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .bank-row:last-child { border-bottom: none; }
 
         .chart-container {
             background-color: var(--card-bg);
@@ -313,6 +328,16 @@
         .item-row.gasto {
             border-left-color: var(--red);
         }
+        .bank-badge {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--gold);
+            margin-top: 2px;
+            border: 1px solid var(--border-color);
+        }
     </style>
 </head>
 <body>
@@ -334,7 +359,6 @@
         <section id="dashboard" class="section active">
             <h2>Dashboard Interactivo</h2>
             
-            <!-- Calendario & Filtros de Fecha -->
             <div class="filter-card">
                 <label>Filtrar por Fecha / Período:</label>
                 <div class="filter-controls" style="margin-top: 8px;">
@@ -347,15 +371,15 @@
 
             <div class="card-grid">
                 <div class="card">
-                    <h3 id="labelVentas">Total Recaudo</h3>
+                    <h3>Total Recaudo</h3>
                     <div class="value" id="dashVentas">$48,126,400</div>
                 </div>
                 <div class="card">
-                    <h3 id="labelGanancia">Ganancia Neta</h3>
+                    <h3>Ganancia Neta</h3>
                     <div class="value positive" id="dashGanancia">$0</div>
                 </div>
                 <div class="card">
-                    <h3 id="labelGastos">Gastos Totales</h3>
+                    <h3>Gastos Totales</h3>
                     <div class="value negative" id="dashGastos">$0</div>
                 </div>
                 <div class="card">
@@ -365,6 +389,31 @@
                 <div class="card" style="grid-column: span 2;">
                     <h3>Faltante Punto de Equilibrio</h3>
                     <div class="value negative" id="dashEquilibrio">-$4,717,927</div>
+                </div>
+            </div>
+
+            <!-- Desglose por Bancos -->
+            <div class="bank-box">
+                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Recaudo Registrado por Banco</h3>
+                <div class="bank-row">
+                    <span>Ava - Daviplata</span>
+                    <strong id="bancoAvaDavi">$0</strong>
+                </div>
+                <div class="bank-row">
+                    <span>Ava - Llave</span>
+                    <strong id="bancoAvaLlave">$0</strong>
+                </div>
+                <div class="bank-row">
+                    <span>Ava - Nequi</span>
+                    <strong id="bancoAvaNequi">$0</strong>
+                </div>
+                <div class="bank-row">
+                    <span>María Paula - Daviplata</span>
+                    <strong id="bancoMPDavi">$0</strong>
+                </div>
+                <div class="bank-row">
+                    <span>María Paula - Llave</span>
+                    <strong id="bancoMPLlave">$0</strong>
                 </div>
             </div>
 
@@ -380,6 +429,16 @@
                 <div class="form-group">
                     <label>Fecha de Venta</label>
                     <input type="date" id="fechaVentaManual" required>
+                </div>
+                <div class="form-group">
+                    <label>Cuenta de Destino (Banco)</label>
+                    <select id="bancoDestino">
+                        <option value="Ava - Daviplata" selected>Ava - Daviplata</option>
+                        <option value="Ava - Llave">Ava - Llave</option>
+                        <option value="Ava - Nequi">Ava - Nequi</option>
+                        <option value="María Paula - Daviplata">María Paula - Daviplata</option>
+                        <option value="María Paula - Llave">María Paula - Llave</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Producto / Referencia</label>
@@ -489,7 +548,6 @@
     <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbx4Opo5e5Q7wOpXvso_llhfyPV_jrv4XSrOnN2lgfqHp1z2D1VTpzmVWcWccy-f1jDv/exec';
 
-        // BASE DE DATOS INICIAL DEL EXCEL
         const BASE_RECAUDO = 48126400;
         const BASE_FLUJO = 5013000;
         const BASE_EQUILIBRIO = -4717927.91;
@@ -500,12 +558,10 @@
         let filtroActual = 'todos';
         let fechaSeleccionada = null;
 
-        // Establecer fechas de hoy por defecto en inputs
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('fechaVentaManual').value = todayStr;
         document.getElementById('fechaGastoManual').value = todayStr;
 
-        // Inicializar Calendario Flatpickr
         flatpickr("#calendarPicker", {
             locale: "es",
             dateFormat: "Y-m-d",
@@ -517,14 +573,12 @@
             }
         });
 
-        // Modo Día / Noche
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             const themeBtn = document.getElementById('themeBtn');
             themeBtn.innerHTML = document.body.classList.contains('light-mode') ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
         }
 
-        // Navegación Pestañas
         function showSection(sectionId, element) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
@@ -532,7 +586,6 @@
             element.classList.add('active');
         }
 
-        // Cargar Datos del Backend
         function cargarDatos() {
             fetch(scriptURL)
                 .then(res => res.json())
@@ -544,10 +597,9 @@
                         actualizarDashboard();
                     }
                 })
-                .catch(err => console.log("Cargando modo offline o sin datos aún:", err));
+                .catch(err => console.log("Cargando...", err));
         }
 
-        // Filtros del Dashboard
         function setFiltro(tipo, btn) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('calendarPicker').value = '';
@@ -557,7 +609,6 @@
             actualizarDashboard();
         }
 
-        // Actualizar Dashboard Dinámicamente
         function actualizarDashboard() {
             const hoy = new Date().toISOString().split('T')[0];
             const mesActual = hoy.substring(0, 7);
@@ -578,12 +629,10 @@
                 return true;
             });
 
-            // Sumatorias del periodo filtrado
             let recaudoFiltrado = ventasFiltradas.reduce((sum, v) => sum + v.precio_venta, 0);
             let gananciaFiltrada = ventasFiltradas.reduce((sum, v) => sum + v.ganancia, 0);
             let gastosFiltradosMonto = gastosFiltrados.reduce((sum, g) => sum + g.monto, 0);
 
-            // Totales globales (Base Excel + Todo lo nuevo)
             let recaudoTotal = BASE_RECAUDO + dbVentas.reduce((sum, v) => sum + v.precio_venta, 0);
             let gastosTotalesGlobal = dbGastos.reduce((sum, g) => sum + g.monto, 0);
             let gananciaTotalGlobal = dbVentas.reduce((sum, v) => sum + v.ganancia, 0);
@@ -591,7 +640,6 @@
             let flujoReal = BASE_FLUJO + dbVentas.reduce((sum, v) => sum + v.precio_venta, 0) - gastosTotalesGlobal;
             let equilibrioReal = BASE_EQUILIBRIO + gananciaTotalGlobal - gastosTotalesGlobal;
 
-            // Actualizar Tarjetas
             if (filtroActual === 'todos') {
                 document.getElementById('dashVentas').innerText = '$' + recaudoTotal.toLocaleString('es-CO');
                 document.getElementById('dashGanancia').innerText = '$' + gananciaTotalGlobal.toLocaleString('es-CO');
@@ -606,6 +654,19 @@
             document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
             document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
 
+            // Conteo por Bancos
+            let sumAvaDavi = ventasFiltradas.filter(v => (v.banco || "Ava - Daviplata") === "Ava - Daviplata").reduce((s, v) => s + v.precio_venta, 0);
+            let sumAvaLlave = ventasFiltradas.filter(v => v.banco === "Ava - Llave").reduce((s, v) => s + v.precio_venta, 0);
+            let sumAvaNequi = ventasFiltradas.filter(v => v.banco === "Ava - Nequi").reduce((s, v) => s + v.precio_venta, 0);
+            let sumMPDavi = ventasFiltradas.filter(v => v.banco === "María Paula - Daviplata").reduce((s, v) => s + v.precio_venta, 0);
+            let sumMPLlave = ventasFiltradas.filter(v => (v.banco === "María Paula - Llave" || v.banco === "María Paula - La Llave")).reduce((s, v) => s + v.precio_venta, 0);
+
+            document.getElementById('bancoAvaDavi').innerText = '$' + sumAvaDavi.toLocaleString('es-CO');
+            document.getElementById('bancoAvaLlave').innerText = '$' + sumAvaLlave.toLocaleString('es-CO');
+            document.getElementById('bancoAvaNequi').innerText = '$' + sumAvaNequi.toLocaleString('es-CO');
+            document.getElementById('bancoMPDavi').innerText = '$' + sumMPDavi.toLocaleString('es-CO');
+            document.getElementById('bancoMPLlave').innerText = '$' + sumMPLlave.toLocaleString('es-CO');
+
             renderizarGrafico(ventasFiltradas);
         }
 
@@ -618,6 +679,7 @@
                         <div>
                             <strong style="font-size: 13px;">${v.producto}</strong>
                             <span style="display:block; font-size: 11px; color: var(--text-muted);">${v.fecha.split('T')[0]} | Margen: ${v.margen}</span>
+                            <span class="bank-badge"><i class="fas fa-building-columns"></i> ${v.banco || 'Ava - Daviplata'}</span>
                         </div>
                         <div style="color: var(--gold); font-weight: bold;">+$${v.precio_venta.toLocaleString('es-CO')}</div>
                     </div>`;
@@ -637,7 +699,6 @@
             });
         }
 
-        // Gráfico Dinámico
         function renderizarGrafico(ventasArray) {
             const ctx = document.getElementById('salesChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -675,7 +736,6 @@
             });
         }
 
-        // Cálculos Venta
         const costoInput = document.getElementById('costo');
         const precioInput = document.getElementById('precioVenta');
         const calcBox = document.getElementById('calcBox');
@@ -699,9 +759,9 @@
         costoInput.addEventListener('input', calcularMargen);
         precioInput.addEventListener('input', calcularMargen);
 
-        // Enviar Venta
         function registrarVenta() {
             const fechaManual = document.getElementById('fechaVentaManual').value;
+            const banco = document.getElementById('bancoDestino').value;
             const prod = document.getElementById('producto').value;
             const costo = parseFloat(costoInput.value);
             const precio = parseFloat(precioInput.value);
@@ -711,23 +771,23 @@
             btn.innerText = "Guardando..."; btn.disabled = true;
 
             const payload = {
-                tipo: 'venta', fechaManual: fechaManual, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%"
+                tipo: 'venta', fechaManual: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%"
             };
 
             fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(() => {
                 alert("Venta guardada.");
-                dbVentas.push({ fecha: fechaManual, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" });
+                dbVentas.push({ fecha: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" });
                 renderizarListas();
                 actualizarDashboard();
                 document.getElementById('saleForm').reset();
                 document.getElementById('fechaVentaManual').value = todayStr;
+                document.getElementById('bancoDestino').value = "Ava - Daviplata";
                 calcBox.style.display = 'none';
                 btn.innerText = "Guardar Venta"; btn.disabled = false;
             });
         }
 
-        // Enviar Gasto
         function registrarGasto() {
             const fechaManual = document.getElementById('fechaGastoManual').value;
             const cat = document.getElementById('categoriaGasto').value;
@@ -752,7 +812,6 @@
             });
         }
 
-        // Cargar datos al iniciar
         cargarDatos();
     </script>
 </body>
