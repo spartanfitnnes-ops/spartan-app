@@ -3,916 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spartan Fitness - Gestor de Operaciones</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
-
+    <title>Registro de Ventas - Spartan Fitness</title>
     <style>
-        :root {
-            --bg-color: #111111;
-            --card-bg: #1a1a1a;
-            --text-color: #ffffff;
-            --text-muted: #aaaaaa;
-            --border-color: #333333;
-            --gold: #d4af37;
-            --input-bg: #222222;
-            --red: #ff4c4c;
-            --green: #4caf50;
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"], input[type="date"], select {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
         }
-
-        body.light-mode {
-            --bg-color: #f4f5f7;
-            --card-bg: #ffffff;
-            --text-color: #111111;
-            --text-muted: #666666;
-            --border-color: #e0e0e0;
-            --gold: #b8860b;
-            --input-bg: #f0f0f0;
-            --red: #d32f2f;
-            --green: #2e7d32;
+        button {
+            width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;
         }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding-bottom: 75px;
-        }
-
-        header {
-            background-color: var(--card-bg);
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--gold);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-img {
-            height: 38px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .logo-text {
-            color: var(--gold);
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: var(--gold);
-            font-size: 20px;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .container {
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .section {
-            display: none;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h2 {
-            color: var(--gold);
-            margin-bottom: 15px;
-            font-size: 18px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-        }
-
-        .filter-card {
-            background-color: var(--card-bg);
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 15px;
-        }
-
-        .filter-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .filter-btn.active {
-            background-color: var(--gold);
-            color: #111;
-            border-color: var(--gold);
-        }
-
-        .calendar-input {
-            flex-grow: 1;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            padding: 14px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-        }
-
-        .card h3 {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .card .value {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--gold);
-        }
-
-        .card .value.negative { color: var(--red); }
-        .card .value.positive { color: var(--green); }
-
-        .bank-box {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 20px;
-        }
-
-        .bank-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            padding: 6px 0;
-            border-bottom: 1px dashed var(--border-color);
-        }
-        .bank-row:last-child { border-bottom: none; }
-
-        .chart-container {
-            background-color: var(--card-bg);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 4px;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        input[type="text"],
-        input[type="number"],
-        input[type="date"],
-        select {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-color);
-            font-size: 15px;
-        }
-
-        .btn {
-            background-color: var(--gold);
-            color: #111;
-            border: none;
-            padding: 14px;
-            width: 100%;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            text-transform: uppercase;
-            margin-top: 10px;
-        }
-
-        .btn:disabled {
-            background-color: #555;
-            color: #888;
-            cursor: not-allowed;
-        }
-
-        .result-box {
-            background-color: var(--input-bg);
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 12px;
-            border-left: 4px solid var(--gold);
-        }
-
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: var(--card-bg);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            border-top: 1px solid var(--border-color);
-            z-index: 100;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 11px;
-            padding: 4px 10px;
-            cursor: pointer;
-        }
-
-        .nav-item i {
-            font-size: 18px;
-            margin-bottom: 3px;
-        }
-
-        .nav-item.active {
-            color: var(--gold);
-        }
-        
-        .recent-list {
-            margin-top: 15px;
-        }
-        .item-row {
-            background: var(--card-bg);
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 3px solid var(--gold);
-            border-top: 1px solid var(--border-color);
-            border-right: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-        }
-        .item-row.gasto {
-            border-left-color: var(--red);
-        }
-        .bank-badge {
-            display: inline-block;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: var(--input-bg);
-            color: var(--gold);
-            margin-top: 2px;
-            border: 1px solid var(--border-color);
-        }
-        .btn-edit {
-            background: none;
-            border: none;
-            color: var(--gold);
-            cursor: pointer;
-            font-size: 16px;
-            padding: 6px 10px;
-        }
+        button:hover { background-color: #218838; }
+        #mensaje { margin-top: 15px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo-container">
-            <img src="logo.jpg" alt="Spartan Helmet" class="logo-img" onerror="this.style.display='none'; document.getElementById('helmet-icon').style.display='inline-block';">
-            <i id="helmet-icon" class="fas fa-shield-halved" style="display:none; color: var(--gold); font-size: 22px;"></i>
-            <div class="logo-text">SPARTAN FITNESS</div>
+<div class="container">
+    <h2>Registrar Nueva Venta</h2>
+    <form id="formularioVentas">
+        <div class="form-group">
+            <label for="fecha">Fecha:</label>
+            <input type="datetime-local" id="fecha" required>
         </div>
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
-            <i class="fas fa-sun"></i>
-        </button>
-    </header>
-
-    <div class="container">
         
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="section active">
-            <h2>Dashboard Interactivo</h2>
-            
-            <div class="filter-card">
-                <label>Filtrar por Fecha / Período:</label>
-                <div class="filter-controls" style="margin-top: 8px;">
-                    <button class="filter-btn active" onclick="setFiltro('todos', this)">Todo</button>
-                    <button class="filter-btn" onclick="setFiltro('hoy', this)">Hoy</button>
-                    <button class="filter-btn" onclick="setFiltro('mes', this)">Este Mes</button>
-                    <input type="text" id="calendarPicker" class="calendar-input" placeholder="📅 Seleccionar día...">
-                </div>
-            </div>
-
-            <div class="card-grid">
-                <div class="card">
-                    <h3>Total Recaudo</h3>
-                    <div class="value" id="dashVentas">$48,126,400</div>
-                </div>
-                <div class="card">
-                    <h3>Ganancia Neta</h3>
-                    <div class="value positive" id="dashGanancia">$0</div>
-                </div>
-                <div class="card">
-                    <h3>Gastos Totales</h3>
-                    <div class="value negative" id="dashGastos">$0</div>
-                </div>
-                <div class="card">
-                    <h3>Flujo de Caja Real</h3>
-                    <div class="value positive" id="dashFlujo">$7,510,000</div>
-                </div>
-                <div class="card" style="grid-column: span 2;">
-                    <h3>Faltante Punto de Equilibrio</h3>
-                    <div class="value negative" id="dashEquilibrio">-$4,717,927</div>
-                </div>
-            </div>
-
-            <div class="bank-box">
-                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Saldo Disponible por Banco</h3>
-                <div class="bank-row"><span>Ava - Daviplata</span><strong id="bancoAvaDavi">$599,000</strong></div>
-                <div class="bank-row"><span>Ava - Llave</span><strong id="bancoAvaLlave">$4,396,000</strong></div>
-                <div class="bank-row"><span>Ava - Nequi</span><strong id="bancoAvaNequi">$2,515,000</strong></div>
-                <div class="bank-row"><span>María Paula - Daviplata</span><strong id="bancoMPDavi">$0</strong></div>
-                <div class="bank-row"><span>María Paula - Llave</span><strong id="bancoMPLlave">$0</strong></div>
-            </div>
-
-            <div class="chart-container">
-                <canvas id="salesChart"></canvas>
-            </div>
-        </section>
-
-        <!-- VENTAS -->
-        <section id="ventas" class="section">
-            <h2 id="tituloFormVenta">Registrar Nueva Venta</h2>
-            <form id="saleForm">
-                <input type="hidden" id="editRowId" value="">
-                <div class="form-group">
-                    <label>Fecha de Venta</label>
-                    <input type="date" id="fechaVentaManual" required>
-                </div>
-                <div class="form-group">
-                    <label>Cuenta de Destino (Banco)</label>
-                    <select id="bancoDestino">
-                        <option value="Ava - Daviplata" selected>Ava - Daviplata</option>
-                        <option value="Ava - Llave">Ava - Llave</option>
-                        <option value="Ava - Nequi">Ava - Nequi</option>
-                        <option value="María Paula - Daviplata">María Paula - Daviplata</option>
-                        <option value="María Paula - Llave">María Paula - Llave</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Producto / Referencia</label>
-                    <input type="text" id="producto" placeholder="Ej: Camiseta Oversize Talla M" required>
-                </div>
-                <div class="form-group">
-                    <label>Costo Inicial ($)</label>
-                    <input type="number" id="costo" placeholder="Ej: 35000" required>
-                </div>
-                <div class="form-group">
-                    <label>Precio Final Venta ($)</label>
-                    <input type="number" id="precioVenta" placeholder="Ej: 75000" required>
-                </div>
-
-                <div class="result-box" id="calcBox" style="display: none;">
-                    <div class="result-row">
-                        <span>Ganancia Neta:</span>
-                        <strong id="gananciaNeta" style="color: var(--green);">$0</strong>
-                    </div>
-                    <div class="result-row">
-                        <span>Margen de Ganancia:</span>
-                        <strong id="margenPorcentaje" style="color: var(--gold);">0%</strong>
-                    </div>
-                </div>
-
-                <button type="button" id="btnVenta" class="btn" onclick="registrarVenta()">Guardar Venta</button>
-            </form>
-
-            <div class="recent-list">
-                <h2>Ventas Registradas</h2>
-                <div id="listaVentas">
-                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Cargando datos...</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- GASTOS -->
-        <section id="gastos" class="section">
-            <h2>Registrar Gasto / Recompra</h2>
-            <form id="gastoForm">
-                <div class="form-group">
-                    <label>Fecha del Gasto</label>
-                    <input type="date" id="fechaGastoManual" required>
-                </div>
-                <div class="form-group">
-                    <label>Cuenta de Origen (Banco de donde sale el dinero)</label>
-                    <select id="bancoGasto">
-                        <option value="Ava - Daviplata" selected>Ava - Daviplata</option>
-                        <option value="Ava - Llave">Ava - Llave</option>
-                        <option value="Ava - Nequi">Ava - Nequi</option>
-                        <option value="María Paula - Daviplata">María Paula - Daviplata</option>
-                        <option value="María Paula - Llave">María Paula - Llave</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Categoría del Gasto</label>
-                    <select id="categoriaGasto">
-                        <option value="Recompra de Mercancía">Recompra de Mercancía</option>
-                        <option value="Envíos / Transportes">Envíos / Transportes</option>
-                        <option value="Publicidad / Marketing">Publicidad / Marketing</option>
-                        <option value="Empaques / Etiquetas">Empaques / Etiquetas</option>
-                        <option value="Otro Operativo">Otro Operativo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Concepto / Detalle</label>
-                    <input type="text" id="conceptoGasto" placeholder="Ej: Pago lote 10 Tops Leggings" required>
-                </div>
-                <div class="form-group">
-                    <label>Monto del Gasto ($)</label>
-                    <input type="number" id="montoGasto" placeholder="Ej: 450000" required>
-                </div>
-
-                <button type="button" id="btnGasto" class="btn" onclick="registrarGasto()">Guardar Gasto</button>
-            </form>
-
-            <div class="recent-list">
-                <h2>Gastos Registrados</h2>
-                <div id="listaGastos">
-                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Cargando gastos...</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- INVENTARIO -->
-        <section id="inventario" class="section">
-            <h2>Gestión de Stock</h2>
-            <div style="text-align: center; padding: 40px 20px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);">
-                <i class="fas fa-camera" style="font-size: 36px; color: var(--gold); margin-bottom: 12px;"></i>
-                <h3>Escaner de Unidades</h3>
-                <p style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">En el próximo paso conectaremos la cámara para captura rápida de productos unitarios.</p>
-            </div>
-        </section>
-
-    </div>
-
-    <!-- MENÚ INFERIOR -->
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="showSection('dashboard', this)">
-            <i class="fas fa-chart-pie"></i>
-            <span>Dashboard</span>
+        <div class="form-group">
+            <label for="producto">Producto:</label>
+            <input type="text" id="producto" placeholder="Ej. Chaqueta doble prenda" required>
         </div>
-        <div class="nav-item" onclick="showSection('ventas', this)">
-            <i class="fas fa-plus-circle"></i>
-            <span>Ventas</span>
+
+        <div class="form-group">
+            <label for="costo">Costo ($):</label>
+            <input type="number" id="costo" placeholder="Ej. 95000" required>
         </div>
-        <div class="nav-item" onclick="showSection('gastos', this)">
-            <i class="fas fa-minus-circle"></i>
-            <span>Gastos</span>
+
+        <div class="form-group">
+            <label for="precio_venta">Precio Venta ($):</label>
+            <input type="number" id="precio_venta" placeholder="Ej. 175000" required>
         </div>
-        <div class="nav-item" onclick="showSection('inventario', this)">
-            <i class="fas fa-box"></i>
-            <span>Stock</span>
+
+        <!-- AQUÍ ESTÁ EL CAMPO CLAVE DEL BANCO -->
+        <div class="form-group">
+            <label for="cuenta_destino">Cuenta Destino (Banco):</label>
+            <select id="cuenta_destino" required>
+                <option value="" disabled selected>Seleccione el banco...</option>
+                <option value="Bancolombia">Bancolombia</option>
+                <option value="Nequi">Nequi</option>
+                <option value="Davivienda">Davivienda</option>
+                <option value="Daviplata">Daviplata</option>
+                <option value="Efectivo">Efectivo</option>
+                <!-- Agrega aquí más bancos si los necesitas -->
+            </select>
         </div>
-    </div>
 
-    <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbx4Opo5e5Q7wOpXvso_llhfyPV_jrv4XSrOnN2lgfqHp1z2D1VTpzmVWcWccy-f1jDv/exec';
+        <button type="submit">Guardar Venta</button>
+    </form>
+    <div id="mensaje"></div>
+</div>
 
-        const BASE_RECAUDO = 48126400;
-        const BASE_EQUILIBRIO = -4717927.91;
+<script>
+    // ⚠️ ATENCIÓN: PEGA AQUÍ TU URL DE APPS SCRIPT
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOj9PiDx8EOpjfcQzYDPRjKoteZ7J2H5maxYy5mOZO6theRq_oh5SIqO7gGcUCxLc/exec'; 
 
-        // Distribución Base Inicial ($7,510,000 exactos)
-        const BASE_AVA_DAVI = 599000;
-        const BASE_AVA_LLAVE = 4396000;
-        const BASE_AVA_NEQUI = 2515000;
-        const BASE_MP_DAVI = 0;
-        const BASE_MP_LLAVE = 0;
+    document.getElementById('formularioVentas').addEventListener('submit', function(event) {
+        event.preventDefault(); // Evitar que la página se recargue
 
-        let dbVentas = [];
-        let dbGastos = [];
-        let chartInstance = null;
-        let filtroActual = 'todos';
-        let fechaSeleccionada = null;
+        // Mostrar mensaje de carga
+        const divMensaje = document.getElementById('mensaje');
+        divMensaje.style.color = '#0056b3';
+        divMensaje.textContent = 'Guardando datos...';
 
-        const todayStr = new Date().toISOString().split('T')[0];
-        document.getElementById('fechaVentaManual').value = todayStr;
-        document.getElementById('fechaGastoManual').value = todayStr;
+        // Capturar datos del formulario
+        const fecha = document.getElementById('fecha').value;
+        const producto = document.getElementById('producto').value;
+        const costo = document.getElementById('costo').value;
+        const precio_venta = document.getElementById('precio_venta').value;
+        const cuenta_destino = document.getElementById('cuenta_destino').value;
 
-        flatpickr("#calendarPicker", {
-            locale: "es",
-            dateFormat: "Y-m-d",
-            onChange: function(selectedDates, dateStr) {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                filtroActual = 'fecha';
-                fechaSeleccionada = dateStr;
-                actualizarDashboard();
+        // Preparar el paquete de datos para enviar
+        const formData = new FormData();
+        // NOTA: Los nombres entre comillas ('Fecha', 'Producto') deben coincidir con e.parameter en el Apps Script
+        formData.append('Fecha', fecha);
+        formData.append('Producto', producto);
+        formData.append('Costo', costo);
+        formData.append('Precio_Venta', precio_venta);
+        formData.append('Cuenta_Destino', cuenta_destino);
+
+        // Enviar la petición al servidor (Google Apps Script)
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            if(data === "Éxito") {
+                divMensaje.style.color = 'green';
+                divMensaje.textContent = '¡Venta registrada con éxito!';
+                document.getElementById('formularioVentas').reset(); // Limpiar formulario
+                setTimeout(() => divMensaje.textContent = '', 4000);
+            } else {
+                divMensaje.style.color = 'red';
+                divMensaje.textContent = 'Hubo un error: ' + data;
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            divMensaje.style.color = 'red';
+            divMensaje.textContent = 'Error de conexión. Inténtalo de nuevo.';
         });
+    });
 
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            const themeBtn = document.getElementById('themeBtn');
-            themeBtn.innerHTML = document.body.classList.contains('light-mode') ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-        }
+    // Poner fecha y hora actual por defecto al cargar la página
+    window.onload = function() {
+        var now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('fecha').value = now.toISOString().slice(0,16);
+    };
+</script>
 
-        function showSection(sectionId, element) {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
-            element.classList.add('active');
-        }
-
-        function cargarDatos() {
-            if (document.getElementById('editRowId').value !== "") return;
-
-            fetch(scriptURL)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        dbVentas = data.ventas || [];
-                        dbGastos = data.gastos || [];
-                        renderizarListas();
-                        actualizarDashboard();
-                    }
-                })
-                .catch(err => console.log("Cargando...", err));
-        }
-
-        function setFiltro(tipo, btn) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('calendarPicker').value = '';
-            btn.classList.add('active');
-            filtroActual = tipo;
-            fechaSeleccionada = null;
-            actualizarDashboard();
-        }
-
-        function actualizarDashboard() {
-            const hoy = new Date().toISOString().split('T')[0];
-            const mesActual = hoy.substring(0, 7);
-
-            let ventasFiltradas = dbVentas.filter(v => {
-                let f = String(v.fecha).split('T')[0].split(' ')[0];
-                if (filtroActual === 'hoy') return f === hoy;
-                if (filtroActual === 'mes') return f.startsWith(mesActual);
-                if (filtroActual === 'fecha') return f === fechaSeleccionada;
-                return true;
-            });
-
-            let gastosFiltrados = dbGastos.filter(g => {
-                let f = String(g.fecha).split('T')[0].split(' ')[0];
-                if (filtroActual === 'hoy') return f === hoy;
-                if (filtroActual === 'mes') return f.startsWith(mesActual);
-                if (filtroActual === 'fecha') return f === fechaSeleccionada;
-                return true;
-            });
-
-            let recaudoFiltrado = ventasFiltradas.reduce((sum, v) => sum + v.precio_venta, 0);
-            let gananciaFiltrada = ventasFiltradas.reduce((sum, v) => sum + v.ganancia, 0);
-            let gastosFiltradosMonto = gastosFiltrados.reduce((sum, g) => sum + g.monto, 0);
-
-            let recaudoTotal = BASE_RECAUDO + dbVentas.reduce((sum, v) => sum + v.precio_venta, 0);
-            let gastosTotalesGlobal = dbGastos.reduce((sum, g) => sum + g.monto, 0);
-            let gananciaTotalGlobal = dbVentas.reduce((sum, v) => sum + v.ganancia, 0);
-
-            // CÁLCULO DE SALDO DISPONIBLE NETO POR BANCO (Solo se suman ventas que tengan banco asignado)
-            const getIngresos = (banco) => dbVentas.filter(v => v.banco === banco).reduce((s, v) => s + v.precio_venta, 0);
-            const getEgresos = (banco) => dbGastos.filter(g => g.banco === banco).reduce((s, g) => s + g.monto, 0);
-
-            let saldoAvaDavi = BASE_AVA_DAVI + getIngresos("Ava - Daviplata") - getEgresos("Ava - Daviplata");
-            let saldoAvaLlave = BASE_AVA_LLAVE + getIngresos("Ava - Llave") - getEgresos("Ava - Llave");
-            let saldoAvaNequi = BASE_AVA_NEQUI + getIngresos("Ava - Nequi") - getEgresos("Ava - Nequi");
-            let saldoMPDavi = BASE_MP_DAVI + getIngresos("María Paula - Daviplata") - getEgresos("María Paula - Daviplata");
-            let saldoMPLlave = BASE_MP_LLAVE + getIngresos("María Paula - Llave") + getIngresos("María Paula - La Llave") - getEgresos("María Paula - Llave") - getEgresos("María Paula - La Llave");
-
-            let flujoReal = saldoAvaDavi + saldoAvaLlave + saldoAvaNequi + saldoMPDavi + saldoMPLlave;
-            let equilibrioReal = BASE_EQUILIBRIO + gananciaTotalGlobal - gastosTotalesGlobal;
-
-            if (filtroActual === 'todos') {
-                document.getElementById('dashVentas').innerText = '$' + recaudoTotal.toLocaleString('es-CO');
-                document.getElementById('dashGanancia').innerText = '$' + gananciaTotalGlobal.toLocaleString('es-CO');
-                document.getElementById('dashGastos').innerText = '$' + gastosTotalesGlobal.toLocaleString('es-CO');
-            } else {
-                document.getElementById('dashVentas').innerText = '$' + recaudoFiltrado.toLocaleString('es-CO');
-                document.getElementById('dashGanancia').innerText = '$' + gananciaFiltrada.toLocaleString('es-CO');
-                document.getElementById('dashGastos').innerText = '$' + gastosFiltradosMonto.toLocaleString('es-CO');
-            }
-
-            document.getElementById('dashFlujo').innerText = '$' + flujoReal.toLocaleString('es-CO');
-            document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
-            document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
-
-            document.getElementById('bancoAvaDavi').innerText = '$' + saldoAvaDavi.toLocaleString('es-CO');
-            document.getElementById('bancoAvaLlave').innerText = '$' + saldoAvaLlave.toLocaleString('es-CO');
-            document.getElementById('bancoAvaNequi').innerText = '$' + saldoAvaNequi.toLocaleString('es-CO');
-            document.getElementById('bancoMPDavi').innerText = '$' + saldoMPDavi.toLocaleString('es-CO');
-            document.getElementById('bancoMPLlave').innerText = '$' + saldoMPLlave.toLocaleString('es-CO');
-
-            renderizarGrafico(ventasFiltradas);
-        }
-
-        function renderizarListas() {
-            const listaV = document.getElementById('listaVentas');
-            listaV.innerHTML = dbVentas.length ? '' : '<p style="color: var(--text-muted); font-size: 13px; text-align: center;">Sin registros.</p>';
-            [...dbVentas].reverse().forEach(v => {
-                listaV.innerHTML += `
-                    <div class="item-row">
-                        <div>
-                            <strong style="font-size: 13px;">${v.producto}</strong>
-                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${String(v.fecha).split('T')[0]} | Margen: ${v.margen}</span>
-                            <span class="bank-badge"><i class="fas fa-building-columns"></i> ${v.banco || 'Histórico'}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div style="color: var(--gold); font-weight: bold;">+$${v.precio_venta.toLocaleString('es-CO')}</div>
-                            ${v.rowId ? `<button class="btn-edit" onclick="cargarEdicionVenta(${v.rowId})"><i class="fas fa-edit"></i></button>` : ''}
-                        </div>
-                    </div>`;
-            });
-
-            const listaG = document.getElementById('listaGastos');
-            listaG.innerHTML = dbGastos.length ? '' : '<p style="color: var(--text-muted); font-size: 13px; text-align: center;">Sin gastos.</p>';
-            [...dbGastos].reverse().forEach(g => {
-                listaG.innerHTML += `
-                    <div class="item-row gasto">
-                        <div>
-                            <strong style="font-size: 13px;">${g.concepto}</strong>
-                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${String(g.fecha).split('T')[0]} | ${g.categoria}</span>
-                            <span class="bank-badge" style="color: var(--red); border-color: var(--red);"><i class="fas fa-arrow-down-short-wide"></i> ${g.banco || 'Ava - Daviplata'}</span>
-                        </div>
-                        <div style="color: var(--red); font-weight: bold;">-$${g.monto.toLocaleString('es-CO')}</div>
-                    </div>`;
-            });
-        }
-
-        function renderizarGrafico(ventasArray) {
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-
-            let labels = ventasArray.map(v => String(v.fecha).split('T')[0]).slice(-10);
-            let data = ventasArray.map(v => v.precio_venta).slice(-10);
-
-            if (!labels.length) {
-                labels = ['Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Base Excel'];
-                data = [5000000, 13000000, 20500000, 32500000, 41500000, 48126400];
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Ventas ($)',
-                        data: data,
-                        borderColor: '#d4af37',
-                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { labels: { color: '#aaa' } } },
-                    scales: {
-                        y: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
-                        x: { ticks: { color: '#aaa' }, grid: { color: '#333' } }
-                    }
-                }
-            });
-        }
-
-        const costoInput = document.getElementById('costo');
-        const precioInput = document.getElementById('precioVenta');
-        const calcBox = document.getElementById('calcBox');
-        let gananciaCalculada = 0;
-        let margenCalculado = 0;
-
-        function calcularMargen() {
-            const costo = parseFloat(costoInput.value);
-            const precio = parseFloat(precioInput.value);
-            if (costo > 0 && precio > 0) {
-                gananciaCalculada = precio - costo;
-                margenCalculado = ((gananciaCalculada / precio) * 100).toFixed(1);
-                document.getElementById('gananciaNeta').innerText = '$' + gananciaCalculada.toLocaleString('es-CO');
-                document.getElementById('margenPorcentaje').innerText = margenCalculado + '%';
-                document.getElementById('gananciaNeta').style.color = gananciaCalculada >= 0 ? 'var(--green)' : 'var(--red)';
-                calcBox.style.display = 'block';
-            } else {
-                calcBox.style.display = 'none';
-            }
-        }
-        costoInput.addEventListener('input', calcularMargen);
-        precioInput.addEventListener('input', calcularMargen);
-
-        function cancelarEdicion() {
-            document.getElementById('saleForm').reset();
-            document.getElementById('editRowId').value = "";
-            document.getElementById('tituloFormVenta').innerText = "Registrar Nueva Venta";
-            document.getElementById('fechaVentaManual').value = todayStr;
-            document.getElementById('bancoDestino').value = "Ava - Daviplata";
-            calcBox.style.display = 'none';
-            
-            const btn = document.getElementById('btnVenta');
-            btn.innerText = "Guardar Venta";
-            
-            const btnCancel = document.getElementById('btnCancelarEdicion');
-            if (btnCancel) btnCancel.remove();
-        }
-
-        function cargarEdicionVenta(rowId) {
-            const v = dbVentas.find(item => item.rowId === rowId);
-            if (!v) return;
-
-            document.getElementById('editRowId').value = v.rowId;
-            document.getElementById('fechaVentaManual').value = String(v.fecha).split('T')[0].split(' ')[0];
-            document.getElementById('bancoDestino').value = v.banco || "Ava - Daviplata";
-            document.getElementById('producto').value = v.producto;
-            document.getElementById('costo').value = v.costo;
-            document.getElementById('precioVenta').value = v.precio_venta;
-            
-            calcularMargen();
-            document.getElementById('tituloFormVenta').innerText = "Editar Venta (#" + rowId + ")";
-            
-            const btnVenta = document.getElementById('btnVenta');
-            btnVenta.innerText = "Actualizar Venta";
-
-            if (!document.getElementById('btnCancelarEdicion')) {
-                const btnCancel = document.createElement('button');
-                btnCancel.type = 'button';
-                btnCancel.id = 'btnCancelarEdicion';
-                btnCancel.className = 'btn';
-                btnCancel.style.backgroundColor = '#555';
-                btnCancel.style.color = '#fff';
-                btnCancel.style.marginTop = '6px';
-                btnCancel.innerText = 'Cancelar Edición';
-                btnCancel.onclick = cancelarEdicion;
-                btnVenta.parentNode.appendChild(btnCancel);
-            }
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function registrarVenta() {
-            const rowId = document.getElementById('editRowId').value;
-            const fechaManual = document.getElementById('fechaVentaManual').value;
-            const banco = document.getElementById('bancoDestino').value;
-            const prod = document.getElementById('producto').value;
-            const costo = parseFloat(costoInput.value);
-            const precio = parseFloat(precioInput.value);
-            if (!prod || !costo || !precio) return alert("Completa los datos de la venta.");
-
-            const btn = document.getElementById('btnVenta');
-            btn.innerText = "Guardando..."; btn.disabled = true;
-
-            const payload = {
-                action: rowId ? 'updateVenta' : 'createVenta',
-                rowId: rowId ? parseInt(rowId) : null,
-                tipo: 'venta',
-                fechaManual: fechaManual,
-                banco: banco,
-                producto: prod,
-                costo: costo,
-                precio_venta: precio,
-                ganancia: gananciaCalculada,
-                margen: margenCalculado + "%"
-            };
-
-            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => {
-                alert(rowId ? "Venta actualizada exitosamente." : "Venta registrada.");
-                
-                if (rowId) {
-                    const index = dbVentas.findIndex(v => v.rowId === parseInt(rowId));
-                    if (index !== -1) {
-                        dbVentas[index] = { rowId: parseInt(rowId), fecha: fechaManual, banco: banco, producto: prod, costo: costo, precio_venta: precio, ganancia: gananciaCalculada, margen: margenCalculado + "%" };
-                    }
-                } else {
-                    const maxRowId = dbVentas.length > 0 ? Math.max(...dbVentas.map(v => v.rowId || 0)) : 1;
-                    const nuevoRowId = maxRowId > 0 ? maxRowId + 1 : dbVentas.length + 2;
-
-                    dbVentas.push({ 
-                        rowId: nuevoRowId, 
-                        fecha: fechaManual, 
-                        banco: banco, 
-                        producto: prod, 
-                        costo: costo, 
-                        precio_venta: precio, 
-                        ganancia: gananciaCalculada, 
-                        margen: margenCalculado + "%" 
-                    });
-                }
-
-                cancelarEdicion();
-                renderizarListas();
-                actualizarDashboard();
-                
-                btn.innerText = "Guardar Venta"; 
-                btn.disabled = false;
-
-                setTimeout(cargarDatos, 2000);
-            });
-        }
-
-        function registrarGasto() {
-            const fechaManual = document.getElementById('fechaGastoManual').value;
-            const banco = document.getElementById('bancoGasto').value;
-            const cat = document.getElementById('categoriaGasto').value;
-            const concepto = document.getElementById('conceptoGasto').value;
-            const monto = parseFloat(document.getElementById('montoGasto').value);
-            if (!concepto || !monto) return alert("Ingresa concepto y monto.");
-
-            const btn = document.getElementById('btnGasto');
-            btn.innerText = "Guardando..."; btn.disabled = true;
-
-            const payload = { tipo: 'gasto', fechaManual: fechaManual, banco: banco, categoria: cat, concepto: concepto, monto: monto };
-
-            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => {
-                alert("Gasto guardado.");
-                dbGastos.push({ fecha: fechaManual, banco: banco, categoria: cat, concepto: concepto, monto: monto });
-                renderizarListas();
-                actualizarDashboard();
-                document.getElementById('gastoForm').reset();
-                document.getElementById('fechaGastoManual').value = todayStr;
-                document.getElementById('bancoGasto').value = "Ava - Daviplata";
-                btn.innerText = "Guardar Gasto"; btn.disabled = false;
-            });
-        }
-
-        cargarDatos();
-    </script>
 </body>
 </html>
