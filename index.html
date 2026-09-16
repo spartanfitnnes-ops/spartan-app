@@ -651,8 +651,8 @@
             let gastosTotalesGlobal = dbGastos.reduce((sum, g) => sum + g.monto, 0);
             let gananciaTotalGlobal = dbVentas.reduce((sum, v) => sum + v.ganancia, 0);
 
-            // CÁLCULO DIRECTO DEL PUNTO DE EQUILIBRIO: BASE + NUEVAS VENTAS
-            let equilibrioReal = BASE_EQUILIBRIO + recaudoNuevasVentas;
+            // CÁLCULO DEL PUNTO DE EQUILIBRIO: BASE + VENTAS NUEVAS - GASTOS NUEVOS
+            let equilibrioReal = BASE_EQUILIBRIO + recaudoNuevasVentas - gastosTotalesGlobal;
 
             // ACTUALIZACIÓN DE TARJETAS EN PANTALLA
             if (filtroActual === 'todos') {
