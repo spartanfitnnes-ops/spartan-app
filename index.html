@@ -645,9 +645,28 @@
             let gananciaFiltrada = ventasFiltradas.reduce((sum, v) => sum + v.ganancia, 0);
             let gastosFiltradosMonto = gastosFiltrados.reduce((sum, g) => sum + g.monto, 0);
 
-            let recaudoTotal = BASE_RECAUDO + dbVentas.reduce((sum, v) => sum + v.precio_venta, 0);
+            // VARIABLES GLOBALES
+            let recaudoNuevasVentas = dbVentas.reduce((sum, v) => sum + v.precio_venta, 0);
+            let recaudoTotal = BASE_RECAUDO + recaudoNuevasVentas;
             let gastosTotalesGlobal = dbGastos.reduce((sum, g) => sum + g.monto, 0);
             let gananciaTotalGlobal = dbVentas.reduce((sum, v) => sum + v.ganancia, 0);
+
+            // CÁLCULO DIRECTO DEL PUNTO DE EQUILIBRIO: BASE + NUEVAS VENTAS
+            let equilibrioReal = BASE_EQUILIBRIO + recaudoNuevasVentas;
+
+            // ACTUALIZACIÓN DE TARJETAS EN PANTALLA
+            if (filtroActual === 'todos') {
+                document.getElementById('dashVentas').innerText = '$' + recaudoTotal.toLocaleString('es-CO');
+                document.getElementById('dashGanancia').innerText = '$' + gananciaTotalGlobal.toLocaleString('es-CO');
+                document.getElementById('dashGastos').innerText = '$' + gastosTotalesGlobal.toLocaleString('es-CO');
+            } else {
+                document.getElementById('dashVentas').innerText = '$' + recaudoFiltrado.toLocaleString('es-CO');
+                document.getElementById('dashGanancia').innerText = '$' + gananciaFiltrada.toLocaleString('es-CO');
+                document.getElementById('dashGastos').innerText = '$' + gastosFiltradosMonto.toLocaleString('es-CO');
+            }
+
+            document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
+            document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
 
             // CÁLCULO DE SALDO DISPONIBLE NETO POR BANCO (Solo se suman ventas que tengan banco explícito)
             const getIngresos = (banco) => dbVentas.filter(v => v.banco === banco).reduce((s, v) => s + v.precio_venta, 0);
@@ -660,22 +679,8 @@
             let saldoMPLlave = BASE_MP_LLAVE + getIngresos("María Paula - Llave") + getIngresos("María Paula - La Llave") - getEgresos("María Paula - Llave") - getEgresos("María Paula - La Llave");
 
             let flujoReal = saldoAvaDavi + saldoAvaLlave + saldoAvaNequi + saldoMPDavi + saldoMPLlave;
-            let equilibrioReal = BASE_EQUILIBRIO + gananciaTotalGlobal - gastosTotalesGlobal;
-
-            if (filtroActual === 'todos') {
-                document.getElementById('dashVentas').innerText = '$' + recaudoTotal.toLocaleString('es-CO');
-                document.getElementById('dashGanancia').innerText = '$' + gananciaTotalGlobal.toLocaleString('es-CO');
-                document.getElementById('dashGastos').innerText = '$' + gastosTotalesGlobal.toLocaleString('es-CO');
-            } else {
-                document.getElementById('dashVentas').innerText = '$' + recaudoFiltrado.toLocaleString('es-CO');
-                document.getElementById('dashGanancia').innerText = '$' + gananciaFiltrada.toLocaleString('es-CO');
-                document.getElementById('dashGastos').innerText = '$' + gastosFiltradosMonto.toLocaleString('es-CO');
-            }
-
+            
             document.getElementById('dashFlujo').innerText = '$' + flujoReal.toLocaleString('es-CO');
-            document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
-            document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
-
             document.getElementById('bancoAvaDavi').innerText = '$' + saldoAvaDavi.toLocaleString('es-CO');
             document.getElementById('bancoAvaLlave').innerText = '$' + saldoAvaLlave.toLocaleString('es-CO');
             document.getElementById('bancoAvaNequi').innerText = '$' + saldoAvaNequi.toLocaleString('es-CO');
