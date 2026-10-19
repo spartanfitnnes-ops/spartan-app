@@ -22,6 +22,7 @@
             --input-bg: #222222;
             --red: #ff4c4c;
             --green: #4caf50;
+            --blue: #4dabf7;
         }
 
         body.light-mode {
@@ -34,6 +35,7 @@
             --input-bg: #f0f0f0;
             --red: #d32f2f;
             --green: #2e7d32;
+            --blue: #1971c2;
         }
         
         * {
@@ -191,6 +193,7 @@
 
         .card .value.negative { color: var(--red); }
         .card .value.positive { color: var(--green); }
+        .card .value.usd { color: var(--blue); }
 
         .bank-box {
             background-color: var(--card-bg);
@@ -255,6 +258,10 @@
             margin-top: 10px;
         }
 
+        .btn-blue {
+            background-color: var(--blue);
+        }
+
         .btn:disabled {
             background-color: #555;
             color: #888;
@@ -295,8 +302,8 @@
             align-items: center;
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 11px;
-            padding: 4px 10px;
+            font-size: 10px;
+            padding: 4px 6px;
             cursor: pointer;
         }
 
@@ -327,6 +334,9 @@
         }
         .item-row.gasto {
             border-left-color: var(--red);
+        }
+        .item-row.inversion {
+            border-left-color: var(--blue);
         }
         .bank-badge {
             display: inline-block;
@@ -391,17 +401,23 @@
                     <div class="value negative" id="dashGastos">$0</div>
                 </div>
                 <div class="card">
-                    <h3>Flujo de Caja Real</h3>
+                    <h3>Flujo de Caja COP</h3>
                     <div class="value positive" id="dashFlujo">$7,510,000</div>
                 </div>
                 <div class="card" style="grid-column: span 2;">
                     <h3>Faltante Punto de Equilibrio</h3>
                     <div class="value negative" id="dashEquilibrio">-$4,717,927</div>
                 </div>
+                <!-- TARJETA DE DÓLARES -->
+                <div class="card" style="grid-column: span 2; border-color: var(--blue);">
+                    <h3>Billetera Dólares Invertidos</h3>
+                    <div class="value usd" id="dashUsd">$0 USD</div>
+                </div>
             </div>
 
             <div class="bank-box">
-                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Saldo Disponible por Banco</h3>
+                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Saldo Disponible por Cuenta (COP)</h3>
+                <div class="bank-row"><span>Efectivo Físico</span><strong id="bancoEfectivo">$0</strong></div>
                 <div class="bank-row"><span>Ava - Daviplata</span><strong id="bancoAvaDavi">$599,000</strong></div>
                 <div class="bank-row"><span>Ava - Llave</span><strong id="bancoAvaLlave">$4,396,000</strong></div>
                 <div class="bank-row"><span>Ava - Nequi</span><strong id="bancoAvaNequi">$2,515,000</strong></div>
@@ -424,8 +440,9 @@
                     <input type="date" id="fechaVentaManual" required>
                 </div>
                 <div class="form-group">
-                    <label>Cuenta de Destino (Banco)</label>
+                    <label>Cuenta de Destino (Banco / Efectivo)</label>
                     <select id="bancoDestino">
+                        <option value="Efectivo">Efectivo Físico</option>
                         <option value="Ava - Daviplata" selected>Ava - Daviplata</option>
                         <option value="Ava - Llave">Ava - Llave</option>
                         <option value="Ava - Nequi">Ava - Nequi</option>
@@ -477,8 +494,9 @@
                     <input type="date" id="fechaGastoManual" required>
                 </div>
                 <div class="form-group">
-                    <label>Cuenta de Origen (Banco de donde sale el dinero)</label>
+                    <label>Cuenta de Origen (De dónde sale el dinero)</label>
                     <select id="bancoGasto">
+                        <option value="Efectivo">Efectivo Físico</option>
                         <option value="Ava - Daviplata" selected>Ava - Daviplata</option>
                         <option value="Ava - Llave">Ava - Llave</option>
                         <option value="Ava - Nequi">Ava - Nequi</option>
@@ -501,7 +519,7 @@
                     <input type="text" id="conceptoGasto" placeholder="Ej: Pago lote 10 Tops Leggings" required>
                 </div>
                 <div class="form-group">
-                    <label>Monto del Gasto ($)</label>
+                    <label>Monto del Gasto ($ COP)</label>
                     <input type="number" id="montoGasto" placeholder="Ej: 450000" required>
                 </div>
 
@@ -512,6 +530,45 @@
                 <h2>Gastos Registrados</h2>
                 <div id="listaGastos">
                     <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Cargando gastos...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- INVERSION (DÓLARES) -->
+        <section id="inversion" class="section">
+            <h2 style="color: var(--blue); border-color: var(--blue);">Comprar Dólares (Inversión)</h2>
+            <form id="inversionForm">
+                <div class="form-group">
+                    <label>Fecha de Compra</label>
+                    <input type="date" id="fechaInvManual" required>
+                </div>
+                <div class="form-group">
+                    <label>Cuenta de Origen (Con qué pagaste los dólares)</label>
+                    <select id="bancoInv">
+                        <option value="Efectivo">Efectivo Físico</option>
+                        <option value="Ava - Daviplata">Ava - Daviplata</option>
+                        <option value="Ava - Llave">Ava - Llave</option>
+                        <option value="Ava - Nequi" selected>Ava - Nequi</option>
+                        <option value="María Paula - Daviplata">María Paula - Daviplata</option>
+                        <option value="María Paula - Llave">María Paula - Llave</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Pesos Gastados ($ COP)</label>
+                    <input type="number" id="montoCopInv" placeholder="Ej: 400000" required>
+                </div>
+                <div class="form-group">
+                    <label>Dólares Comprados ($ USD)</label>
+                    <input type="number" id="montoUsdInv" placeholder="Ej: 100" required>
+                </div>
+
+                <button type="button" id="btnInversion" class="btn btn-blue" onclick="registrarInversion()">Guardar Inversión</button>
+            </form>
+
+            <div class="recent-list">
+                <h2 style="color: var(--blue); border-color: var(--blue);">Historial de Compra USD</h2>
+                <div id="listaInversiones">
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Cargando historial...</p>
                 </div>
             </div>
         </section>
@@ -542,6 +599,10 @@
             <i class="fas fa-minus-circle"></i>
             <span>Gastos</span>
         </div>
+        <div class="nav-item" onclick="showSection('inversion', this)">
+            <i class="fas fa-dollar-sign" style="color: var(--blue);"></i>
+            <span>Inversión</span>
+        </div>
         <div class="nav-item" onclick="showSection('inventario', this)">
             <i class="fas fa-box"></i>
             <span>Stock</span>
@@ -549,13 +610,14 @@
     </div>
 
     <script>
-        // URL NUEVA DE TU GOOGLE APPS SCRIPT
+        // URL DE TU GOOGLE APPS SCRIPT
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxOj9PiDx8EOpjfcQzYDPRjKoteZ7J2H5maxYy5mOZO6theRq_oh5SIqO7gGcUCxLc/exec';
 
         const BASE_RECAUDO = 48126400;
         const BASE_EQUILIBRIO = -4717927.91;
 
-        // Distribución Base Inicial ($7,510,000 exactos)
+        // Distribución Base Inicial
+        const BASE_EFECTIVO = 0;
         const BASE_AVA_DAVI = 599000;
         const BASE_AVA_LLAVE = 4396000;
         const BASE_AVA_NEQUI = 2515000;
@@ -564,6 +626,7 @@
 
         let dbVentas = [];
         let dbGastos = [];
+        let dbInversiones = [];
         let chartInstance = null;
         let filtroActual = 'todos';
         let fechaSeleccionada = null;
@@ -571,6 +634,7 @@
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('fechaVentaManual').value = todayStr;
         document.getElementById('fechaGastoManual').value = todayStr;
+        document.getElementById('fechaInvManual').value = todayStr;
 
         flatpickr("#calendarPicker", {
             locale: "es",
@@ -605,6 +669,7 @@
                     if (data.status === "success") {
                         dbVentas = data.ventas || [];
                         dbGastos = data.gastos || [];
+                        dbInversiones = data.inversiones || [];
                         renderizarListas();
                         actualizarDashboard();
                     }
@@ -651,10 +716,10 @@
             let gastosTotalesGlobal = dbGastos.reduce((sum, g) => sum + g.monto, 0);
             let gananciaTotalGlobal = dbVentas.reduce((sum, v) => sum + v.ganancia, 0);
 
-            // CÁLCULO DEL PUNTO DE EQUILIBRIO: BASE + VENTAS NUEVAS - GASTOS NUEVOS
-            let equilibrioReal = BASE_EQUILIBRIO + recaudoNuevasVentas - gastosTotalesGlobal;
+            // PUNTO DE EQUILIBRIO: BASE + VENTAS NUEVAS
+            let equilibrioReal = BASE_EQUILIBRIO + recaudoNuevasVentas;
 
-            // ACTUALIZACIÓN DE TARJETAS EN PANTALLA
+            // ACTUALIZACIÓN DE TARJETAS
             if (filtroActual === 'todos') {
                 document.getElementById('dashVentas').innerText = '$' + recaudoTotal.toLocaleString('es-CO');
                 document.getElementById('dashGanancia').innerText = '$' + gananciaTotalGlobal.toLocaleString('es-CO');
@@ -668,19 +733,27 @@
             document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
             document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
 
-            // CÁLCULO DE SALDO DISPONIBLE NETO POR BANCO (Solo se suman ventas que tengan banco explícito)
+            // --- CÁLCULO DE DÓLARES ---
+            let totalUsd = dbInversiones.reduce((sum, i) => sum + i.monto_usd, 0);
+            document.getElementById('dashUsd').innerText = '$' + totalUsd.toLocaleString('en-US') + ' USD';
+
+            // --- CÁLCULO DE SALDO DISPONIBLE NETO POR BANCO ---
+            // Se suman Ventas, se restan Gastos y se restan las Inversiones en USD pagadas con cada banco
             const getIngresos = (banco) => dbVentas.filter(v => v.banco === banco).reduce((s, v) => s + v.precio_venta, 0);
             const getEgresos = (banco) => dbGastos.filter(g => g.banco === banco).reduce((s, g) => s + g.monto, 0);
+            const getInvCop = (banco) => dbInversiones.filter(i => i.banco === banco).reduce((s, i) => s + i.monto_cop, 0);
 
-            let saldoAvaDavi = BASE_AVA_DAVI + getIngresos("Ava - Daviplata") - getEgresos("Ava - Daviplata");
-            let saldoAvaLlave = BASE_AVA_LLAVE + getIngresos("Ava - Llave") - getEgresos("Ava - Llave");
-            let saldoAvaNequi = BASE_AVA_NEQUI + getIngresos("Ava - Nequi") - getEgresos("Ava - Nequi");
-            let saldoMPDavi = BASE_MP_DAVI + getIngresos("María Paula - Daviplata") - getEgresos("María Paula - Daviplata");
-            let saldoMPLlave = BASE_MP_LLAVE + getIngresos("María Paula - Llave") + getIngresos("María Paula - La Llave") - getEgresos("María Paula - Llave") - getEgresos("María Paula - La Llave");
+            let saldoEfectivo = BASE_EFECTIVO + getIngresos("Efectivo") - getEgresos("Efectivo") - getInvCop("Efectivo");
+            let saldoAvaDavi = BASE_AVA_DAVI + getIngresos("Ava - Daviplata") - getEgresos("Ava - Daviplata") - getInvCop("Ava - Daviplata");
+            let saldoAvaLlave = BASE_AVA_LLAVE + getIngresos("Ava - Llave") - getEgresos("Ava - Llave") - getInvCop("Ava - Llave");
+            let saldoAvaNequi = BASE_AVA_NEQUI + getIngresos("Ava - Nequi") - getEgresos("Ava - Nequi") - getInvCop("Ava - Nequi");
+            let saldoMPDavi = BASE_MP_DAVI + getIngresos("María Paula - Daviplata") - getEgresos("María Paula - Daviplata") - getInvCop("María Paula - Daviplata");
+            let saldoMPLlave = BASE_MP_LLAVE + getIngresos("María Paula - Llave") + getIngresos("María Paula - La Llave") - getEgresos("María Paula - Llave") - getEgresos("María Paula - La Llave") - getInvCop("María Paula - Llave") - getInvCop("María Paula - La Llave");
 
-            let flujoReal = saldoAvaDavi + saldoAvaLlave + saldoAvaNequi + saldoMPDavi + saldoMPLlave;
+            let flujoReal = saldoEfectivo + saldoAvaDavi + saldoAvaLlave + saldoAvaNequi + saldoMPDavi + saldoMPLlave;
             
             document.getElementById('dashFlujo').innerText = '$' + flujoReal.toLocaleString('es-CO');
+            document.getElementById('bancoEfectivo').innerText = '$' + saldoEfectivo.toLocaleString('es-CO');
             document.getElementById('bancoAvaDavi').innerText = '$' + saldoAvaDavi.toLocaleString('es-CO');
             document.getElementById('bancoAvaLlave').innerText = '$' + saldoAvaLlave.toLocaleString('es-CO');
             document.getElementById('bancoAvaNequi').innerText = '$' + saldoAvaNequi.toLocaleString('es-CO');
@@ -719,6 +792,23 @@
                             <span class="bank-badge" style="color: var(--red); border-color: var(--red);"><i class="fas fa-arrow-down-short-wide"></i> ${g.banco || 'Ava - Daviplata'}</span>
                         </div>
                         <div style="color: var(--red); font-weight: bold;">-$${g.monto.toLocaleString('es-CO')}</div>
+                    </div>`;
+            });
+
+            const listaI = document.getElementById('listaInversiones');
+            listaI.innerHTML = dbInversiones.length ? '' : '<p style="color: var(--text-muted); font-size: 13px; text-align: center;">Aún no has comprado dólares.</p>';
+            [...dbInversiones].reverse().forEach(i => {
+                listaI.innerHTML += `
+                    <div class="item-row inversion">
+                        <div>
+                            <strong style="font-size: 13px; color: var(--blue);">Compra USD</strong>
+                            <span style="display:block; font-size: 11px; color: var(--text-muted);">${String(i.fecha).split('T')[0]}</span>
+                            <span class="bank-badge" style="color: var(--blue); border-color: var(--blue);"><i class="fas fa-wallet"></i> de ${i.banco || 'N/A'}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: var(--blue); font-weight: bold;">+$${i.monto_usd.toLocaleString('en-US')} USD</div>
+                            <div style="color: var(--red); font-size: 11px;">-$${i.monto_cop.toLocaleString('es-CO')} COP</div>
+                        </div>
                     </div>`;
             });
         }
@@ -915,6 +1005,38 @@
                 document.getElementById('fechaGastoManual').value = todayStr;
                 document.getElementById('bancoGasto').value = "Ava - Daviplata";
                 btn.innerText = "Guardar Gasto"; btn.disabled = false;
+            });
+        }
+
+        function registrarInversion() {
+            const fechaManual = document.getElementById('fechaInvManual').value;
+            const banco = document.getElementById('bancoInv').value;
+            const montoCop = parseFloat(document.getElementById('montoCopInv').value);
+            const montoUsd = parseFloat(document.getElementById('montoUsdInv').value);
+
+            if (!montoCop || !montoUsd) return alert("Ingresa el monto en COP y en USD.");
+
+            const btn = document.getElementById('btnInversion');
+            btn.innerText = "Guardando..."; btn.disabled = true;
+
+            const payload = { 
+                tipo: 'inversion', 
+                fechaManual: fechaManual, 
+                banco: banco, 
+                monto_cop: montoCop, 
+                monto_usd: montoUsd 
+            };
+
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(() => {
+                alert("Inversión guardada.");
+                dbInversiones.push({ fecha: fechaManual, banco: banco, monto_cop: montoCop, monto_usd: montoUsd });
+                renderizarListas();
+                actualizarDashboard();
+                document.getElementById('inversionForm').reset();
+                document.getElementById('fechaInvManual').value = todayStr;
+                document.getElementById('bancoInv').value = "Ava - Nequi";
+                btn.innerText = "Guardar Inversión"; btn.disabled = false;
             });
         }
 
