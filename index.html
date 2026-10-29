@@ -260,6 +260,7 @@
 
         .btn-blue {
             background-color: var(--blue);
+            color: #111;
         }
 
         .btn:disabled {
@@ -408,7 +409,6 @@
                     <h3>Faltante Punto de Equilibrio</h3>
                     <div class="value negative" id="dashEquilibrio">-$4,717,927</div>
                 </div>
-                <!-- TARJETA DE DÓLARES -->
                 <div class="card" style="grid-column: span 2; border-color: var(--blue);">
                     <h3>Billetera Dólares Invertidos</h3>
                     <div class="value usd" id="dashUsd">$0 USD</div>
@@ -416,7 +416,7 @@
             </div>
 
             <div class="bank-box">
-                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Saldo Disponible por Cuenta</h3>
+                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase;">Saldo Disponible por Cuenta (COP)</h3>
                 <div class="bank-row"><span>Efectivo Físico</span><strong id="bancoEfectivo">$0</strong></div>
                 <div class="bank-row"><span>Ava - Daviplata</span><strong id="bancoAvaDavi">$599,000</strong></div>
                 <div class="bank-row"><span>Ava - Llave</span><strong id="bancoAvaLlave">$4,396,000</strong></div>
@@ -426,7 +426,14 @@
             </div>
 
             <div class="chart-container">
+                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 12px; text-transform: uppercase;">Tendencia de Ventas</h3>
                 <canvas id="salesChart"></canvas>
+            </div>
+
+            <!-- NUEVA GRÁFICA DE NÓMINA Y GASTOS -->
+            <div class="chart-container">
+                <h3 style="font-size: 13px; color: var(--gold); margin-bottom: 12px; text-transform: uppercase;">Gastos por Nómina y Categoría</h3>
+                <canvas id="expensesChart"></canvas>
             </div>
         </section>
 
@@ -507,7 +514,9 @@
                 <div class="form-group">
                     <label>Categoría del Gasto</label>
                     <select id="categoriaGasto">
-                        <option value="Recompra de Mercancía">Recompra de Mercancía</option>
+                        <option value="Nómina - Ava">Nómina - Ava</option>
+                        <option value="Nómina - Mapis">Nómina - Mapis</option>
+                        <option value="Recompra de Mercancía" selected>Recompra de Mercancía</option>
                         <option value="Envíos / Transportes">Envíos / Transportes</option>
                         <option value="Publicidad / Marketing">Publicidad / Marketing</option>
                         <option value="Empaques / Etiquetas">Empaques / Etiquetas</option>
@@ -516,7 +525,7 @@
                 </div>
                 <div class="form-group">
                     <label>Concepto / Detalle</label>
-                    <input type="text" id="conceptoGasto" placeholder="Ej: Pago lote 10 Tops Leggings" required>
+                    <input type="text" id="conceptoGasto" placeholder="Ej: Quincena Nómina Ava" required>
                 </div>
                 <div class="form-group">
                     <label>Monto del Gasto ($ COP)</label>
@@ -615,7 +624,7 @@
         const BASE_RECAUDO = 48126400;
         const BASE_EQUILIBRIO = -4717927.91;
 
-        // Distribución Base Inicial
+        // Distribución Base Inicial ($7,510,000 en cuentas)
         const BASE_EFECTIVO = 0;
         const BASE_AVA_DAVI = 599000;
         const BASE_AVA_LLAVE = 4396000;
@@ -627,6 +636,7 @@
         let dbGastos = [];
         let dbInversiones = [];
         let chartInstance = null;
+        let chartExpensesInstance = null;
         let filtroActual = 'todos';
         let fechaSeleccionada = null;
 
@@ -716,7 +726,7 @@
             let gananciaTotalGlobal = dbVentas.reduce((sum, v) => sum + v.ganancia, 0);
 
             // -----------------------------------------------------------------------------------
-            // CÁLCULO DEL PUNTO DE EQUILIBRIO: BASE + VENTAS NUEVAS - GASTOS NUEVOS
+            // FÓRMULA PUNTO DE EQUILIBRIO VALIDADA: BASE + VENTAS NUEVAS - GASTOS NUEVOS
             // -----------------------------------------------------------------------------------
             let equilibrioReal = BASE_EQUILIBRIO + recaudoNuevasVentas - gastosTotalesGlobal;
 
@@ -734,11 +744,11 @@
             document.getElementById('dashEquilibrio').innerText = '$' + equilibrioReal.toLocaleString('es-CO');
             document.getElementById('dashEquilibrio').className = 'value ' + (equilibrioReal >= 0 ? 'positive' : 'negative');
 
-            // --- CÁLCULO DE DÓLARES ---
+            // --- BILLETERA DE DÓLARES ---
             let totalUsd = dbInversiones.reduce((sum, i) => sum + i.monto_usd, 0);
             document.getElementById('dashUsd').innerText = '$' + totalUsd.toLocaleString('en-US') + ' USD';
 
-            // CÁLCULO DE SALDO DISPONIBLE NETO POR BANCO
+            // SALDO DISPONIBLE NETO POR BANCO (Ventas - Gastos - Salidas a Dólares)
             const getIngresos = (banco) => dbVentas.filter(v => v.banco === banco).reduce((s, v) => s + v.precio_venta, 0);
             const getEgresos = (banco) => dbGastos.filter(g => g.banco === banco).reduce((s, g) => s + g.monto, 0);
             const getInvCop = (banco) => dbInversiones.filter(i => i.banco === banco).reduce((s, i) => s + i.monto_cop, 0);
@@ -761,6 +771,7 @@
             document.getElementById('bancoMPLlave').innerText = '$' + saldoMPLlave.toLocaleString('es-CO');
 
             renderizarGrafico(ventasFiltradas);
+            renderizarGraficoGastos(gastosFiltrados);
         }
 
         function renderizarListas() {
@@ -845,6 +856,80 @@
                     scales: {
                         y: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
                         x: { ticks: { color: '#aaa' }, grid: { color: '#333' } }
+                    }
+                }
+            });
+        }
+
+        // FUNCIÓN GRÁFICA DE GASTOS Y NÓMINA (BARRA HORIZONTAL)
+        function renderizarGraficoGastos(gastosArray) {
+            const ctxExp = document.getElementById('expensesChart').getContext('2d');
+            if (chartExpensesInstance) chartExpensesInstance.destroy();
+
+            let catTotals = {};
+            gastosArray.forEach(g => {
+                let cat = g.categoria || 'Otro Operativo';
+                catTotals[cat] = (catTotals[cat] || 0) + g.monto;
+            });
+
+            let labels = Object.keys(catTotals);
+            let data = Object.values(catTotals);
+
+            if (!labels.length) {
+                labels = ['Nómina - Ava', 'Nómina - Mapis', 'Sin Gastos'];
+                data = [0, 0, 0];
+            }
+
+            const palette = {
+                'Nómina - Ava': '#d4af37',
+                'Nómina - Mapis': '#f39c12',
+                'Recompra de Mercancía': '#e74c3c',
+                'Envíos / Transportes': '#3498db',
+                'Publicidad / Marketing': '#9b59b6',
+                'Empaques / Etiquetas': '#1abc9c',
+                'Otro Operativo': '#7f8c8d'
+            };
+
+            let bgColors = labels.map(l => palette[l] || '#d4af37');
+
+            chartExpensesInstance = new Chart(ctxExp, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Gasto ($)',
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.raw.toLocaleString('es-CO');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#aaa',
+                                callback: function(val) {
+                                    return '$' + (val >= 1000000 ? (val/1000000).toFixed(1) + 'M' : (val/1000).toFixed(0) + 'k');
+                                }
+                            },
+                            grid: { color: '#333' }
+                        },
+                        y: {
+                            ticks: { color: '#aaa', font: { size: 11 } },
+                            grid: { display: false }
+                        }
                     }
                 }
             });
@@ -1005,6 +1090,8 @@
                 document.getElementById('fechaGastoManual').value = todayStr;
                 document.getElementById('bancoGasto').value = "Ava - Daviplata";
                 btn.innerText = "Guardar Gasto"; btn.disabled = false;
+
+                setTimeout(cargarDatos, 2000);
             });
         }
 
@@ -1037,6 +1124,8 @@
                 document.getElementById('fechaInvManual').value = todayStr;
                 document.getElementById('bancoInv').value = "Ava - Nequi";
                 btn.innerText = "Guardar Inversión"; btn.disabled = false;
+
+                setTimeout(cargarDatos, 2000);
             });
         }
 
